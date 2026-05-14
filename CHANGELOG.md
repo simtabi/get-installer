@@ -6,7 +6,9 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
-### Added: Phase L (signed + auth + rate-limited install URLs)
+## [0.2.0] - 2026-05-14
+
+### Added: Phase E foundation (signed + auth + rate-limited install URLs)
 
 Registry-driven distribution can now declare per-product access
 controls for private / enterprise / domain-locked channels. Three

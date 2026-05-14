@@ -27,7 +27,7 @@ class GetInstaller < Formula
 
   desc "Registry-driven curl-pipe-sh-style installer for dev tools"
   homepage "https://opensource.simtabi.com/products/get-installer"
-  url "https://files.pythonhosted.org/packages/source/g/get-installer/get_installer-0.1.0.tar.gz"
+  url "https://files.pythonhosted.org/packages/source/g/get-installer/get_installer-0.2.0.tar.gz"
   sha256 "REPLACE_WITH_PYPI_SDIST_SHA256_ON_RELEASE"
   license "MIT"
   head "https://github.com/simtabi/get-installer.git", branch: "main"

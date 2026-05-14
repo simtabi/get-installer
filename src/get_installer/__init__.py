@@ -56,4 +56,10 @@ __all__ = [
     "current_platform",
 ]
 
-__version__ = "1.0.0"
+from importlib import metadata as _md
+
+try:
+    __version__ = _md.version("get-installer")
+except _md.PackageNotFoundError:
+    # Editable install before metadata is built, or running from source tree.
+    __version__ = "0.0.0+unknown"
