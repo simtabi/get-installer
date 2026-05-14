@@ -54,7 +54,9 @@ page is the prose summary.
 | `homepage` | no | Product landing URL. |
 | `default_version` | yes | Used when user omits `--version`. |
 | `supported_platforms` | no | Subset of `linux`, `darwin`, `windows`. Default: all three. |
+| `supported_ecosystems` | no | Fine-grained labels (e.g. `linux-glibc`, `linux-musl`, `wsl`, `cloud-shell-aws`). Falls back to `supported_platforms` when empty. |
 | `versions` | yes | One or more version entries (keyed by semver). |
+| `access` | no | Bearer-token auth + signed-URL expectations (see [Access](#access)). |
 
 ## Versions
 
@@ -166,6 +168,76 @@ wall-clock deadline. After it expires, the next fetch refuses with a
 | `log_mode` | Octal mode (as integer) for the journal log file. `384` = `0o600` = owner only. |
 | `tmp_mode` | Same, for downloaded temp files. |
 | `refuse_symlink_targets_outside` | When true, follow-symlink operations refuse targets escaping their expected dir. (Currently advisory: used by future content_repo features.) |
+
+## Access
+
+Per-product opt-in block declaring bearer-token auth and / or
+pre-signed URL expectations. Public-anonymous products omit it.
+Full design + threat model: [`security.md`](security.md).
+
+```json
+"private-thing": {
+  "name": "private-thing",
+  "default_version": "1.0.0",
+  "access": {
+    "auth": {
+      "kind": "bearer",
+      "required": true,
+      "env_var": "PRIVATE_THING_TOKEN",
+      "hint_url": "https://acme.example/get-token"
+    },
+    "signed": {
+      "algorithm": "HMAC-SHA256",
+      "query_param": "sig",
+      "expires_param": "exp",
+      "max_skew_seconds": 60
+    },
+    "rate_limit_hint": {
+      "anonymous_requests_per_hour": 0,
+      "authenticated_requests_per_hour": 60
+    }
+  },
+  "versions": { "1.0.0": { /* ... */ } }
+}
+```
+
+### `access.auth`
+
+| Field | Default | Effect |
+|---|---|---|
+| `kind` | required | Only `"bearer"` is recognised. |
+| `required` | `false` | When true, installer refuses to proceed without a resolved token. |
+| `env_var` | `"GET_INSTALLER_TOKEN"` | Env var name checked between the `--auth-token` CLI flag and the global `GET_INSTALLER_TOKEN` fallback. |
+| `hint_url` | (none) | URL surfaced in the "no token" error message so the user knows where to fetch one. |
+
+Token resolution order: `--auth-token VALUE` > `$<env_var>` >
+`$GET_INSTALLER_TOKEN`. Tokens travel in the `Authorization: Bearer`
+header, never in the URL query string.
+
+### `access.signed`
+
+| Field | Default | Effect |
+|---|---|---|
+| `algorithm` | required | Only `"HMAC-SHA256"` is recognised today. |
+| `query_param` | `"sig"` | Name of the HMAC signature query parameter. |
+| `expires_param` | `"exp"` | Name of the Unix-seconds expiry query parameter. |
+| `max_skew_seconds` | `60` | Tolerance for clock drift. Must be `>= 0`. |
+
+The installer verifies expiry locally; the signature itself is the
+server's authorisation and is not re-verified client-side. Refuses
+URLs missing either query parameter, with non-numeric `exp`, or
+past `exp + max_skew_seconds`.
+
+### `access.rate_limit_hint`
+
+Pure documentation. Real limits are enforced server-side. The client
+already honours `429 + Retry-After` via the top-level `rate_limits`
+block. Fields:
+
+| Field | Notes |
+|---|---|
+| `anonymous_requests_per_hour` | Hint to surface in the product's docs / CLI output. `0` means anonymous access is disallowed. |
+| `authenticated_requests_per_hour` | Hint for token-holders. |
 
 ## Adding a product
 

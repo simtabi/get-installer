@@ -48,6 +48,17 @@ These keep the surface area small and predictable.
 5. **Security-first defaults.** New features default to the more
    restrictive option. `--allow-X` flags exist for the loose path,
    never the reverse.
+6. **Access controls go through `verify.py`.** Anything that
+   touches bearer tokens, signed-URL expiry, or HTTPS fetches must
+   route through the helpers in `verify.py`. Don't reimplement
+   `Authorization` header construction or `urllib.parse` checks
+   inline. New auth kinds (basic, OAuth) extend `verify.py`, not
+   `config.py` or `installer.py`.
+7. **Per-product `access` is opt-in.** Public products omit the
+   block. Adding `access.auth.required=true` is a breaking change
+   from the user's perspective (their old `--auth-token`-less
+   command stops working); bump the product's version and document
+   it in the changelog the registry serves.
 
 ## Coding conventions
 

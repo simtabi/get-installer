@@ -80,4 +80,4 @@ infrastructure-agnostic.
 | ALB | ~$18 |
 | **Total ballpark for the dynamic API stack** | **~$60/mo** |
 
-Static-only is essentially free.
+Static-only is close to free.

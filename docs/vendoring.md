@@ -82,6 +82,38 @@ Two endpoints:
 Both serve the same files. Pin via `INSTALLER_SHA256` env var (Unix)
 or `-InstallerSha256` parameter (PowerShell) for tamper detection.
 
+### Optional: gate distribution with auth or signed URLs
+
+For private / enterprise / domain-locked tools, declare per-product
+access controls in your `registry.json`:
+
+```json
+"my-private-tool": {
+  "access": {
+    "auth": {
+      "kind": "bearer",
+      "required": true,
+      "env_var": "MY_TOOL_TOKEN",
+      "hint_url": "https://acme.example/tokens"
+    },
+    "signed": {
+      "algorithm": "HMAC-SHA256",
+      "max_skew_seconds": 60
+    }
+  }
+}
+```
+
+Users then run with the token:
+
+```bash
+sh -c "$(curl -fsSL https://get.acme.example/install.sh)" -- \
+  --product my-private-tool --auth-token "$MY_TOOL_TOKEN"
+```
+
+Schema and threat model: [`config-schema.md`](config-schema.md#access),
+[`security.md`](security.md#authenticated-signed-rate-limited-distribution-phase-l).
+
 ## What you DON'T need to touch
 
 | File | Why not |

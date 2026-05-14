@@ -126,6 +126,11 @@ The checklist:
    - URL fetches outside `verify.fetch_https` (zero matches expected)
    - `mode=0o7..` / `chmod` calls in non-test code: verify each is
      ≤ `0o644` for non-secret + `0o600` for journal logs / tmp files.
+   - `access.auth.required=true` products: confirm
+     `verify.require_auth_token` is on the path that fetches them.
+   - `access.signed` products: confirm `verify.check_signed_url`
+     runs on every URL the installer constructs.
+10. **AI-tell prose check**: `grep -rniE 'leverage|seamless|essentially|note that|simply,|comprehensive|robust\b|delve into' docs/ README.md CHANGELOG.md` returns no real prose (only banned-list mentions are OK). Em-dash sandwich pattern (` — `) also zero in prose.
 
 Report findings as a 5-line summary at the top of your first response,
 THEN proceed with the actual user request.
@@ -322,7 +327,7 @@ Gitea: these don't all push to PyPI. The registry should support:
 
 For enterprise / government / university customers:
 
-**Foundation ✔ 2026-05-14 — per-product access controls**
+**Foundation ✔ 2026-05-14: per-product access controls**
 
 - [x] `products.<name>.access.auth`: bearer-token requirement per
       product, with `env_var` and `hint_url`. Token resolution order:
