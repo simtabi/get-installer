@@ -230,6 +230,7 @@ def main(argv: list[str] | None = None) -> int:
         with_python=args.with_python,
         rate_limits=registry.rate_limits,
         access_control=registry.access_control,
+        auth_token=auth_token,
     )
     report = installer.run()
     return 0 if report.success else 1

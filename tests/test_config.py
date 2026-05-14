@@ -318,3 +318,109 @@ def test_post_install_rejects_control_chars(
     reg = Registry.load(_write(tmp_path, base_registry))
     with pytest.raises(ConfigError, match="control characters"):
         reg.resolve("demo")
+
+
+# --- Phase L: access (bearer auth + signed URLs) parsing -----------------
+
+
+def test_access_defaults_to_public_anonymous(
+    tmp_path: Path, base_registry: dict
+) -> None:
+    """Products without an access block remain unauthenticated."""
+    reg = Registry.load(_write(tmp_path, base_registry))
+    cfg = reg.resolve("demo")
+    assert cfg.access.auth is None
+    assert cfg.access.signed is None
+
+
+def test_access_auth_required_block_parses(
+    tmp_path: Path, base_registry: dict
+) -> None:
+    base_registry["products"]["demo"]["access"] = {
+        "auth": {
+            "kind": "bearer",
+            "required": True,
+            "env_var": "DEMO_TOKEN",
+            "hint_url": "https://demo.example/get-token",
+        }
+    }
+    reg = Registry.load(_write(tmp_path, base_registry))
+    cfg = reg.resolve("demo")
+    assert cfg.access.auth is not None
+    assert cfg.access.auth.required is True
+    assert cfg.access.auth.env_var == "DEMO_TOKEN"
+    assert cfg.access.auth.hint_url == "https://demo.example/get-token"
+
+
+def test_access_signed_block_parses_defaults(
+    tmp_path: Path, base_registry: dict
+) -> None:
+    base_registry["products"]["demo"]["access"] = {
+        "signed": {"algorithm": "HMAC-SHA256"}
+    }
+    reg = Registry.load(_write(tmp_path, base_registry))
+    cfg = reg.resolve("demo")
+    assert cfg.access.signed is not None
+    assert cfg.access.signed.query_param == "sig"
+    assert cfg.access.signed.expires_param == "exp"
+    assert cfg.access.signed.max_skew_seconds == 60
+
+
+def test_access_signed_block_honors_overrides(
+    tmp_path: Path, base_registry: dict
+) -> None:
+    base_registry["products"]["demo"]["access"] = {
+        "signed": {
+            "algorithm": "HMAC-SHA256",
+            "query_param": "signature",
+            "expires_param": "expires",
+            "max_skew_seconds": 120,
+        }
+    }
+    reg = Registry.load(_write(tmp_path, base_registry))
+    cfg = reg.resolve("demo")
+    assert cfg.access.signed is not None
+    assert cfg.access.signed.query_param == "signature"
+    assert cfg.access.signed.max_skew_seconds == 120
+
+
+def test_access_rejects_unknown_auth_kind(
+    tmp_path: Path, base_registry: dict
+) -> None:
+    base_registry["products"]["demo"]["access"] = {
+        "auth": {"kind": "basic"}
+    }
+    reg = Registry.load(_write(tmp_path, base_registry))
+    with pytest.raises(ConfigError, match="only 'bearer'"):
+        reg.resolve("demo")
+
+
+def test_access_rejects_unknown_signing_algorithm(
+    tmp_path: Path, base_registry: dict
+) -> None:
+    base_registry["products"]["demo"]["access"] = {
+        "signed": {"algorithm": "RS256"}
+    }
+    reg = Registry.load(_write(tmp_path, base_registry))
+    with pytest.raises(ConfigError, match="HMAC-SHA256"):
+        reg.resolve("demo")
+
+
+def test_access_rejects_negative_skew(
+    tmp_path: Path, base_registry: dict
+) -> None:
+    base_registry["products"]["demo"]["access"] = {
+        "signed": {"algorithm": "HMAC-SHA256", "max_skew_seconds": -5}
+    }
+    reg = Registry.load(_write(tmp_path, base_registry))
+    with pytest.raises(ConfigError, match="non-negative"):
+        reg.resolve("demo")
+
+
+def test_access_block_must_be_object(
+    tmp_path: Path, base_registry: dict
+) -> None:
+    base_registry["products"]["demo"]["access"] = "not-an-object"
+    reg = Registry.load(_write(tmp_path, base_registry))
+    with pytest.raises(ConfigError, match="must be an object"):
+        reg.resolve("demo")

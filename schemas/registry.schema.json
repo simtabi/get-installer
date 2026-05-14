@@ -112,6 +112,71 @@
           "type": "object",
           "minProperties": 1,
           "additionalProperties": { "$ref": "#/$defs/version" }
+        },
+        "access": { "$ref": "#/$defs/access" }
+      }
+    },
+    "access": {
+      "type": "object",
+      "description": "Per-product access controls (Phase L): bearer-token auth + pre-signed URL expiry validation. See docs/security.md.",
+      "additionalProperties": false,
+      "properties": {
+        "auth": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind"],
+          "properties": {
+            "kind": { "const": "bearer" },
+            "required": {
+              "type": "boolean",
+              "default": false,
+              "description": "When true, installer refuses to proceed without a token."
+            },
+            "env_var": {
+              "type": "string",
+              "pattern": "^[A-Z][A-Z0-9_]*$",
+              "default": "GET_INSTALLER_TOKEN",
+              "description": "Env var checked between --auth-token CLI flag and the global GET_INSTALLER_TOKEN fallback."
+            },
+            "hint_url": {
+              "type": "string",
+              "format": "uri",
+              "description": "Where the user can obtain a valid token. Surfaced in the no-token error."
+            }
+          }
+        },
+        "signed": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["algorithm"],
+          "properties": {
+            "algorithm": { "const": "HMAC-SHA256" },
+            "query_param": {
+              "type": "string",
+              "default": "sig",
+              "description": "Name of the signature query parameter on signed URLs."
+            },
+            "expires_param": {
+              "type": "string",
+              "default": "exp",
+              "description": "Name of the Unix-seconds expiry query parameter."
+            },
+            "max_skew_seconds": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 60,
+              "description": "Clock-drift tolerance when validating expiry."
+            }
+          }
+        },
+        "rate_limit_hint": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Pure documentation; server enforces real limits.",
+          "properties": {
+            "anonymous_requests_per_hour": { "type": "integer", "minimum": 0 },
+            "authenticated_requests_per_hour": { "type": "integer", "minimum": 0 }
+          }
         }
       }
     },

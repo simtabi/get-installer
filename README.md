@@ -161,10 +161,16 @@ Headline guarantees:
 - **Journal + rollback**: every state-changing step records an undo
   callback. Signal (SIGINT / SIGTERM) or unhandled exception triggers
   reverse-order rollback.
+- **Per-product access controls** (Phase E foundation): registry can
+  declare `access.auth` (bearer-token, with custom env var + hint
+  URL) and `access.signed` (HMAC-SHA256 pre-signed URLs with local
+  expiry verification). Wired end-to-end through CLI, schema,
+  resolver, and the validate phase.
 
 Pending hardening: SHA256-pinned bootstrap, sigstore signatures,
-reproducible bundle output. See
-[`SPEC.md` §4 Phase F + Phase H](SPEC.md#phase-f--signed-releases).
+reproducible bundle output, full org-scoped tenancy. See
+[`docs/SPEC.md` §4 Phase F + Phase H](docs/SPEC.md#phase-f--signed-releases)
+and [`docs/security.md`](docs/security.md) for the full threat model.
 
 ## Documentation
 

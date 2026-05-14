@@ -26,6 +26,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from types import FrameType
 
+from . import verify
 from .config import AccessControl, InstallConfig, PostInstallStep, Prompt, RateLimits
 from .journal import Journal
 from .ui import UI
@@ -69,6 +70,7 @@ class Installer:
         with_python: bool = False,
         rate_limits: RateLimits | None = None,
         access_control: AccessControl | None = None,
+        auth_token: str | None = None,
     ) -> None:
         self.config = config
         self.ui = ui or UI()
@@ -77,6 +79,7 @@ class Installer:
         self.with_python = with_python
         self.rate_limits = rate_limits or RateLimits()
         self.access_control = access_control or AccessControl()
+        self.auth_token = auth_token
         self.journal = Journal()
         self._prompt_answers: dict[str, str] = {}
 
@@ -193,6 +196,50 @@ class Installer:
                 self.ui.ok(f"{cmd} on PATH ({shutil.which(cmd)})")
             else:
                 self.ui.skip(f"{cmd} not on PATH (optional)")
+
+        # Phase L: per-product auth + signed-URL preflight. Surfaces what
+        # the registry declares before the user commits to the install.
+        self._phase_validate_access()
+
+    def _phase_validate_access(self) -> None:
+        """Enforce per-product access declarations from registry.json.
+
+        - When ``access.auth.required`` is true and no token resolved,
+          raise ``SecurityError`` with the registry's hint URL.
+        - When ``access.signed`` is declared, report the expected
+          query-param names so users debugging a 403 know where to look.
+        - Token-present + auth-not-required is a no-op informational
+          line so users see the token was picked up.
+        """
+        access = self.config.access
+
+        if access.auth is not None:
+            auth = access.auth
+            resolved = verify.resolve_auth_token(
+                self.auth_token,
+                product_env_var=auth.env_var,
+            )
+            if auth.required:
+                verify.require_auth_token(
+                    resolved,
+                    product_name=self.config.product,
+                    env_var=auth.env_var,
+                    hint_url=auth.hint_url,
+                )
+                self.ui.ok(f"auth token resolved (required for {self.config.product})")
+            elif resolved is not None:
+                self.ui.ok(f"auth token resolved (optional for {self.config.product})")
+            else:
+                self.ui.skip(
+                    f"no auth token (optional for {self.config.product})"
+                )
+
+        if access.signed is not None:
+            self.ui.info(
+                f"signed URLs expected: {access.signed.algorithm} via "
+                f"?{access.signed.query_param}&{access.signed.expires_param}, "
+                f"skew tolerance {access.signed.max_skew_seconds}s"
+            )
 
     def _phase_plan(self) -> None:
         self.ui.step(2, self.PHASES, "Plan")

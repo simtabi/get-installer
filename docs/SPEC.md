@@ -252,8 +252,8 @@ explicitly asks.
 - [x] Per-product alias pattern documented (see
       `deploy/build-aliases.sh` which generates them at container
       build time from `registry.json`).
-- [x] CDN deployment recipes documented in `deploy/aws.md` +
-      `deploy/vps.md` + `deploy/cloudflare-tunnel.md`.
+- [x] CDN deployment recipes documented in `aws.md` +
+      `vps.md` + `cloudflare-tunnel.md`.
 
 ### Phase B: Bundle script (vendor-friendly single file) ✔ 2026-05-14
 
@@ -322,13 +322,36 @@ Gitea: these don't all push to PyPI. The registry should support:
 
 For enterprise / government / university customers:
 
+**Foundation ✔ 2026-05-14 — per-product access controls**
+
+- [x] `products.<name>.access.auth`: bearer-token requirement per
+      product, with `env_var` and `hint_url`. Token resolution order:
+      `--auth-token` > product env_var > `$GET_INSTALLER_TOKEN`.
+      (`config.AuthAccess`, `verify.resolve_auth_token`,
+      `verify.require_auth_token`)
+- [x] `products.<name>.access.signed`: HMAC-SHA256 pre-signed URLs
+      with configurable `query_param`, `expires_param`,
+      `max_skew_seconds`. Client verifies expiry locally; signature
+      itself is server-issued. (`config.SignedAccess`,
+      `verify.check_signed_url`)
+- [x] `products.<name>.access.rate_limit_hint`: documentation only;
+      real limits enforced server-side. Client already honours 429 +
+      `Retry-After` via `verify.fetch_https`.
+- [x] `Installer._phase_validate_access`: surfaces auth + signed-URL
+      expectations during validate phase, refuses when token required
+      but missing.
+- [x] Design + threat-model documented in `docs/security.md`.
+
+**Tenant scoping (pending)**
+
 - [ ] **Org-scoped registry view**: registry top-level can declare
       `tenancy: { "mode": "open" | "domain-locked" | "token-locked",
       "orgs": [...] }`. The installer enforces:
       - `domain-locked`: refuses unless the resolved hostname of
         `--registry` URL matches one of the org's allowed DNS suffixes.
       - `token-locked`: requires `GET_INSTALLER_TOKEN` and the server
-        validates it.
+        validates it. Today's per-product `auth.required` is the
+        per-product analogue; tenant scoping generalises it.
 - [ ] Per-org subtree in the registry: `orgs: { "<org-slug>": { products: {...} } }`.
 - [ ] CLI `--org <slug>` selects the subtree. Without `--org`, the
       installer uses the top-level `products` (public) view.
@@ -441,7 +464,7 @@ must publish wheels for both arches.
 #### Build rules
 
 - [ ] `docker buildx build --platform linux/amd64,linux/arm64 …` is the
-      default build command. Document in `deploy/vps.md` and the CI.
+      default build command. Document in `vps.md` and the CI.
 - [ ] Dockerfile uses `--platform=$BUILDPLATFORM` + `$TARGETPLATFORM`
       ARGs for any cross-compilation work. Don't hardcode an arch in
       `FROM` lines.
@@ -503,12 +526,12 @@ Artefacts to add in this repo:
 - [ ] `supervisor.conf`: defines processes: nginx, php-fpm,
       cloudflared, the api worker. Each with retry + auto-restart +
       structured-log redirection.
-- [ ] `deploy/cloudflare-tunnel.md`: recipe for `cloudflared tunnel
+- [ ] `cloudflare-tunnel.md`: recipe for `cloudflared tunnel
       create` + DNS routing.
-- [ ] `deploy/aws.md`: ECS / Fargate / S3 recipes.
-- [ ] `deploy/vps.md`: straight `apt install` + `docker compose`
+- [ ] `aws.md`: ECS / Fargate / S3 recipes.
+- [ ] `vps.md`: straight `apt install` + `docker compose`
       recipe for a single Ubuntu host (the "I have one $5 VPS" path).
-- [ ] `deploy/dev-test-domain.md`: mkcert + dnsmasq for local
+- [ ] `dev-test-domain.md`: mkcert + dnsmasq for local
       `*.test` development.
 
 ### Phase L: Configuration via `.env`

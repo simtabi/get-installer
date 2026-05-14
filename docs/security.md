@@ -69,6 +69,133 @@ It warns (and continues) on:
 - Deprecated version (unless `--no-deprecated`).
 - Missing `INSTALLER_SHA256` env var (bootstrap layer).
 
+## Authenticated + signed + rate-limited distribution (Phase L)
+
+Some product channels need access control: private enterprise builds,
+preview tracks, paid tiers, or government-domain-locked artefacts.
+The installer supports three orthogonal mechanisms that can stack:
+
+1. **Bearer-token auth** for password-protected URLs.
+2. **HMAC-SHA256 URL signing** for time-bound, server-issued URLs.
+3. **Server-enforced rate limiting** with client-side `Retry-After`
+   honour (already shipped).
+
+Each is declared per product (or per version) in `registry.json`
+under an `access` block. Products without an `access` block remain
+public-anonymous.
+
+### Schema additions
+
+```json
+{
+  "products": {
+    "private-thing": {
+      "name": "private-thing",
+      "default_version": "1.0.0",
+      "access": {
+        "auth": {
+          "kind": "bearer",
+          "required": true,
+          "env_var": "PRIVATE_THING_TOKEN",
+          "hint_url": "https://acme.example/get-token"
+        },
+        "signed": {
+          "algorithm": "HMAC-SHA256",
+          "query_param": "sig",
+          "expires_param": "exp",
+          "max_skew_seconds": 60
+        },
+        "rate_limit_hint": {
+          "anonymous_requests_per_hour": 0,
+          "authenticated_requests_per_hour": 60
+        }
+      },
+      "versions": { /* ... */ }
+    }
+  }
+}
+```
+
+Field-by-field:
+
+| Field | Required | Behaviour |
+|---|---|---|
+| `auth.kind` | yes | `bearer` (only kind supported today). Future: `basic`. |
+| `auth.required` | yes | If true, installer refuses to proceed without a token. |
+| `auth.env_var` | no | Env var the user can set instead of `--auth-token`. Defaults to `GET_INSTALLER_TOKEN`. |
+| `auth.hint_url` | no | Surfaced to the user in the "no token" error message. |
+| `signed.algorithm` | yes | Only `HMAC-SHA256` recognised. |
+| `signed.query_param` | no | Defaults to `sig`. |
+| `signed.expires_param` | no | Defaults to `exp` (Unix seconds since epoch). |
+| `signed.max_skew_seconds` | no | Tolerance for clock drift. Defaults to 60. |
+| `rate_limit_hint.*` | no | Pure documentation. Server enforces real limits. |
+
+### Token resolution order (bearer auth)
+
+1. `--auth-token VALUE` on the CLI.
+2. The env var named by `access.auth.env_var` (per-product).
+3. `$GET_INSTALLER_TOKEN` (global fallback).
+4. Refuse with `SecurityError` if `auth.required=true` and none above
+   resolved, surfacing `hint_url` if present.
+
+The token is sent as `Authorization: Bearer <token>` on every fetch
+to the product's declared URLs. Never as a query parameter (prevents
+token leakage to access logs / referer headers / CI traces).
+
+### HMAC-SHA256 URL signing (client-side verification)
+
+When a product's `registry.json` entry declares `signed`, every URL
+the installer fetches for that product is expected to carry
+`?<query_param>=<hex-sha>&<expires_param>=<unix-seconds>`. The client:
+
+1. Refuses URLs missing either query parameter.
+2. Parses `<expires_param>` and refuses if `now > expires +
+   max_skew_seconds`.
+3. Does **not** re-verify the HMAC client-side. The signature is
+   the server's promise that the URL was authorised; the server is
+   the verifier. The client checks expiry only.
+
+This matches the AWS / GCS / Cloudflare R2 pre-signed-URL pattern.
+The installer never holds the signing key.
+
+For self-hosters: see
+[`cloudflare-tunnel.md`](cloudflare-tunnel.md)
+for issuing pre-signed Cloudflare R2 URLs, and
+[`vps.md`](vps.md) for the nginx + signing sidecar pattern.
+
+### Rate-limit handling (client side)
+
+Already implemented in `verify.fetch_https`. On HTTP 429:
+
+1. Read `Retry-After` (seconds or HTTP-date).
+2. Wait that long (capped at the registry's
+   `rate_limits.retry_backoff_seconds` ceiling).
+3. Retry up to `rate_limits.max_retries` times.
+4. The wall-clock deadline `max_total_seconds` caps the whole run.
+
+Servers should:
+- Issue 429 on rate-limit hits (not 403).
+- Set `Retry-After` to a real positive integer.
+- Distinguish per-token from per-IP limits in their response body
+  (the installer surfaces the body in the error message).
+
+### Threat model deltas
+
+| Threat | Mitigation |
+|---|---|
+| Stolen token replayed by attacker | Tokens travel in the `Authorization` header (not URL); rotate via `auth.hint_url` on revocation. Combine with `signed` to bound the replay window. |
+| Pre-signed URL replayed after issuance | `expires_param` caps replay window; `max_skew_seconds` is the only fudge. |
+| Server lies about `expires_param` | The installer is the verifier of expiry; the server can't lie unless it controls the user's clock. |
+| Token leaked via shell history | Prefer `--auth-token "$(cat ~/.config/get-installer/token)"` or set the env var; never `--auth-token AAA` verbatim. |
+| Rate-limit bypass by retrying immediately | Client refuses to retry faster than `Retry-After`. |
+
+### What's intentionally out of scope
+
+- **Mutual TLS / client certificates**: defer to Phase E (multi-tenant).
+- **Basic auth (challenge/response)**: bearer is the documented path; basic only as a future opt-in.
+- **OAuth flows**: out of scope for a one-shot installer.
+- **Token refresh**: the installer is a one-shot tool; users are expected to feed it a current token.
+
 ## Reporting a vulnerability
 
 See [`../../SECURITY.md`](../../SECURITY.md). Disclosure goes to

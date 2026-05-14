@@ -11,6 +11,17 @@ brew install simtabi/tap/<product>
 This page walks through setting up the tap for `get-installer` itself
 and for any product registered in `registry.json`.
 
+## Live formula
+
+The ready-to-ship formula lives at
+[`templates/homebrew-formula/get-installer.rb`](../../templates/homebrew-formula/get-installer.rb).
+On every PyPI release, the same file (with updated `url` + `sha256`)
+lands in `simtabi/homebrew-tap/Formula/get-installer.rb`.
+
+`get-installer` is stdlib-only, so no `resource` blocks are needed.
+The `test do` block exercises `--version`, `--list`, and a clean
+failure on an unknown product.
+
 ## When to use the tap
 
 | Situation | Best channel |

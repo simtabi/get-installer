@@ -113,6 +113,46 @@ class ContentRepo:
 
 
 @dataclass(frozen=True)
+class AuthAccess:
+    """Per-product bearer-token auth declaration (Phase L).
+
+    Surfaces from ``products.<name>.access.auth`` in registry.json.
+    """
+
+    kind: str = "bearer"          # only "bearer" is honoured today
+    required: bool = False
+    env_var: str = "GET_INSTALLER_TOKEN"
+    hint_url: str | None = None
+
+
+@dataclass(frozen=True)
+class SignedAccess:
+    """Per-product signed-URL declaration (Phase L).
+
+    Surfaces from ``products.<name>.access.signed`` in registry.json.
+    The installer verifies expiry locally; the signature itself is
+    server-issued and not re-verified client-side.
+    """
+
+    algorithm: str = "HMAC-SHA256"   # only HMAC-SHA256 is recognised
+    query_param: str = "sig"
+    expires_param: str = "exp"
+    max_skew_seconds: int = 60
+
+
+@dataclass(frozen=True)
+class ProductAccess:
+    """Composed access declaration for a single product.
+
+    ``auth`` is None when the product is public-anonymous (no token
+    needed). ``signed`` is None when URLs aren't pre-signed.
+    """
+
+    auth: AuthAccess | None = None
+    signed: SignedAccess | None = None
+
+
+@dataclass(frozen=True)
 class InstallConfig:
     """Resolved single-version config: what the Installer consumes."""
 
@@ -135,6 +175,7 @@ class InstallConfig:
     supported_platforms: tuple[str, ...] = ()
     homepage: str = ""
     summary: str = ""
+    access: ProductAccess = field(default_factory=ProductAccess)
 
     @property
     def is_current(self) -> bool:
@@ -457,6 +498,7 @@ class Registry:
             prod_platforms=prod_platforms,
             allow_deprecated=allow_deprecated,
             allow_unsupported=allow_unsupported,
+            access_block=prod.get("access"),
         )
 
 
@@ -475,6 +517,7 @@ def _build_install_config(
     prod_platforms: tuple[str, ...],
     allow_deprecated: bool,
     allow_unsupported: bool,
+    access_block: dict[str, Any] | None = None,
 ) -> InstallConfig:
     prefix = f"{product}@{version}"
 
@@ -620,6 +663,8 @@ def _build_install_config(
     ):
         raise ConfigError(f"{prefix}: package_sha256 must be 64 lowercase hex chars")
 
+    access = _parse_product_access(access_block, prefix=f"{product}.access")
+
     return InstallConfig(
         product=product,
         version=version,
@@ -640,7 +685,70 @@ def _build_install_config(
         supported_platforms=prod_platforms,
         homepage=prod_homepage,
         summary=prod_summary,
+        access=access,
     )
+
+
+def _parse_product_access(
+    access_block: dict[str, Any] | None,
+    *,
+    prefix: str,
+) -> ProductAccess:
+    """Parse the per-product ``access`` block from registry.json.
+
+    Returns ``ProductAccess()`` (both fields None) when the block is
+    absent. Raises ``ConfigError`` on schema violations.
+    """
+    if access_block is None:
+        return ProductAccess()
+    if not isinstance(access_block, dict):
+        raise ConfigError(f"{prefix}: must be an object, not {type(access_block).__name__}")
+
+    auth_block = access_block.get("auth")
+    auth: AuthAccess | None = None
+    if auth_block is not None:
+        if not isinstance(auth_block, dict):
+            raise ConfigError(f"{prefix}.auth: must be an object")
+        kind = str(auth_block.get("kind", "bearer"))
+        if kind != "bearer":
+            raise ConfigError(
+                f"{prefix}.auth.kind: only 'bearer' is supported (got {kind!r})"
+            )
+        auth = AuthAccess(
+            kind=kind,
+            required=bool(auth_block.get("required", False)),
+            env_var=str(auth_block.get("env_var", "GET_INSTALLER_TOKEN")),
+            hint_url=(
+                str(auth_block["hint_url"])
+                if auth_block.get("hint_url") is not None
+                else None
+            ),
+        )
+
+    signed_block = access_block.get("signed")
+    signed: SignedAccess | None = None
+    if signed_block is not None:
+        if not isinstance(signed_block, dict):
+            raise ConfigError(f"{prefix}.signed: must be an object")
+        algorithm = str(signed_block.get("algorithm", "HMAC-SHA256"))
+        if algorithm != "HMAC-SHA256":
+            raise ConfigError(
+                f"{prefix}.signed.algorithm: only 'HMAC-SHA256' is supported "
+                f"(got {algorithm!r})"
+            )
+        max_skew = signed_block.get("max_skew_seconds", 60)
+        if not isinstance(max_skew, int) or max_skew < 0:
+            raise ConfigError(
+                f"{prefix}.signed.max_skew_seconds: must be a non-negative int"
+            )
+        signed = SignedAccess(
+            algorithm=algorithm,
+            query_param=str(signed_block.get("query_param", "sig")),
+            expires_param=str(signed_block.get("expires_param", "exp")),
+            max_skew_seconds=max_skew,
+        )
+
+    return ProductAccess(auth=auth, signed=signed)
 
 
 # ---------------------------------------------------------------------------

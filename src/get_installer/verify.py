@@ -14,6 +14,7 @@ import stat
 import sys
 import time
 import urllib.error
+import urllib.parse
 import urllib.request
 from pathlib import Path
 
@@ -204,3 +205,114 @@ def check_path_injection() -> list[str]:
 
 def python_version_at_least(major: int, minor: int) -> bool:
     return sys.version_info[:2] >= (major, minor)
+
+
+# ---- Phase L: signed-URL expiry check + bearer-token preflight -----------
+
+DEFAULT_SIGNATURE_QUERY_PARAM = "sig"
+DEFAULT_EXPIRES_QUERY_PARAM = "exp"
+DEFAULT_MAX_SKEW_SECONDS = 60
+
+
+def check_signed_url(
+    url: str,
+    *,
+    query_param: str = DEFAULT_SIGNATURE_QUERY_PARAM,
+    expires_param: str = DEFAULT_EXPIRES_QUERY_PARAM,
+    max_skew_seconds: int = DEFAULT_MAX_SKEW_SECONDS,
+    now: float | None = None,
+) -> None:
+    """Validate a pre-signed URL's expiry against the local clock.
+
+    The signature itself is the server's authorisation token; the
+    installer doesn't hold the signing key and can't re-verify the
+    HMAC. What it CAN verify is that the URL still has time on it,
+    which gates the most common replay window.
+
+    Raises ``SecurityError`` if:
+
+    - The URL doesn't carry the configured signature query param.
+    - The URL doesn't carry the expires param, or it's non-numeric.
+    - ``now > expires + max_skew_seconds``.
+
+    Args:
+        url: the pre-signed URL to check.
+        query_param: name of the signature query parameter.
+        expires_param: name of the Unix-seconds expiry parameter.
+        max_skew_seconds: clock-drift tolerance in seconds.
+        now: override for ``time.time()`` (test injection).
+    """
+    parsed = urllib.parse.urlparse(url)
+    qs = urllib.parse.parse_qs(parsed.query, keep_blank_values=False)
+
+    sig_vals = qs.get(query_param)
+    if not sig_vals or not sig_vals[0]:
+        raise SecurityError(
+            f"signed URL missing {query_param!r} parameter: {url}"
+        )
+    exp_vals = qs.get(expires_param)
+    if not exp_vals or not exp_vals[0]:
+        raise SecurityError(
+            f"signed URL missing {expires_param!r} parameter: {url}"
+        )
+
+    try:
+        expires_at = int(exp_vals[0])
+    except ValueError as e:
+        raise SecurityError(
+            f"signed URL {expires_param!r} not an integer: {exp_vals[0]!r}"
+        ) from e
+
+    current = now if now is not None else time.time()
+    if current > expires_at + max_skew_seconds:
+        delta = int(current - expires_at)
+        raise SecurityError(
+            f"signed URL expired ({delta}s ago, "
+            f"skew tolerance {max_skew_seconds}s): {url}"
+        )
+
+
+def resolve_auth_token(
+    cli_token: str | None,
+    *,
+    product_env_var: str | None = None,
+    global_env_var: str = "GET_INSTALLER_TOKEN",
+) -> str | None:
+    """Resolve a bearer token from CLI > product env > global env.
+
+    Returns ``None`` if no token resolves. Callers decide whether
+    ``None`` is fatal (e.g., when the product's
+    ``access.auth.required`` is true).
+    """
+    if cli_token:
+        return cli_token
+    if product_env_var:
+        val = os.environ.get(product_env_var)
+        if val:
+            return val
+    return os.environ.get(global_env_var)
+
+
+def require_auth_token(
+    token: str | None,
+    *,
+    product_name: str,
+    env_var: str,
+    hint_url: str | None = None,
+) -> str:
+    """Raise ``SecurityError`` with a helpful message when token missing.
+
+    Used when a product's registry entry declares
+    ``access.auth.required = true``. The message surfaces both the
+    env-var name and the optional hint URL so the user can self-help
+    without diving into the registry.
+    """
+    if token:
+        return token
+    parts = [
+        f"{product_name} requires an auth token but none was provided.",
+        f"Pass --auth-token VALUE or set the {env_var} env var.",
+    ]
+    if hint_url:
+        parts.append(f"Get a token from {hint_url}.")
+    raise SecurityError(" ".join(parts))

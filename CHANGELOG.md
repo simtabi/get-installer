@@ -6,6 +6,46 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Added: Phase L (signed + auth + rate-limited install URLs)
+
+Registry-driven distribution can now declare per-product access
+controls for private / enterprise / domain-locked channels. Three
+orthogonal mechanisms compose:
+
+- **Bearer-token auth**: `access.auth.kind="bearer"`, optional
+  `required=true`, custom `env_var` and `hint_url`. Token resolves
+  CLI > product-env > `$GET_INSTALLER_TOKEN`. Sent as
+  `Authorization: Bearer <token>` header; never in URL query.
+  `verify.require_auth_token()` raises with a helpful no-token error
+  citing the env-var name and the hint URL.
+- **HMAC-SHA256 pre-signed URLs**: `access.signed.algorithm` plus
+  `query_param`, `expires_param`, `max_skew_seconds`. The installer
+  verifies expiry locally (`verify.check_signed_url()`); signature
+  itself is server-issued and not re-verified client-side. Matches
+  AWS / GCS / Cloudflare R2 pre-signed conventions.
+- **Server-side rate-limit hint**: `access.rate_limit_hint` is
+  documentation only; the server enforces real limits. Client-side
+  429 + `Retry-After` handling was already in `verify.fetch_https`.
+
+Schema (`schemas/registry.schema.json`) gains the `access` block on
+products. New public types: `AuthAccess`, `SignedAccess`,
+`ProductAccess` (all on `get_installer.*`). `InstallConfig.access`
+field exposes the parsed declaration.
+
+Installer flow:
+
+- New `Installer._phase_validate_access` step runs after path /
+  command checks. Surfaces auth + signed URL expectations to the
+  user before the plan confirmation.
+- `--auth-token` already plumbed via `Registry.from_url` for the
+  registry fetch; now also passed into `Installer(auth_token=...)`.
+
+Design doc: [`docs/security.md`](docs/security.md) Phase L section
+documents the threat model deltas, token resolution order, what's
+out of scope (mutual TLS, basic auth, OAuth, token refresh).
+
+22 new tests (verify + config). 87 to 109 pass.
+
 ### Added: Homebrew tap distribution channel
 
 - `templates/homebrew-formula.rb.template`: scaffold for the

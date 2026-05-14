@@ -17,14 +17,17 @@ Layout:
 from __future__ import annotations
 
 from .config import (
+    AuthAccess,
     ConfigError,
     ContentRepo,
     InstallConfig,
     PostInstallStep,
+    ProductAccess,
     ProductSummary,
     Prompt,
     Registry,
     ResolutionError,
+    SignedAccess,
     current_platform,
 )
 from .installer import Installer, InstallReport
@@ -34,6 +37,7 @@ from .verify import SecurityError
 
 __all__ = [
     "UI",
+    "AuthAccess",
     "ConfigError",
     "ContentRepo",
     "InstallConfig",
@@ -42,11 +46,13 @@ __all__ = [
     "Journal",
     "JournalEntry",
     "PostInstallStep",
+    "ProductAccess",
     "ProductSummary",
     "Prompt",
     "Registry",
     "ResolutionError",
     "SecurityError",
+    "SignedAccess",
     "current_platform",
 ]
 
