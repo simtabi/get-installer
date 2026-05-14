@@ -6,6 +6,8 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-05-14
+
 ### Added: Docker PUID/PGID handling + entrypoint privilege drop
 
 Linux Docker has a classic UID/GID failure mode: container UID 0
