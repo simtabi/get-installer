@@ -4,7 +4,7 @@ A reusable, **registry-driven `curl | sh`-style installer** for
 distributing developer tools across public OSS, private enterprises,
 universities, and government / domain-locked contexts.
 
-> Pronounced "get installer" — same words as the URL: `get.simtabi.com`.
+> Pronounced "get installer": same words as the URL `get.simtabi.com`.
 > The technique is also called **one-line installer**, **bootstrap installer**,
 > or **distribution channel** (see [`SPEC.md` §0](SPEC.md#0--project-identity-locked)).
 
@@ -38,9 +38,9 @@ irm https://get.simtabi.com/install.ps1 | iex
 
 Distributing developer tools is a solved problem **only when the tool is
 already on PyPI / Homebrew / apt / a package store**. For everything
-else — fresh-machine bootstrap, mixed-OS install, on-prem enterprise
+else (fresh-machine bootstrap, mixed-OS install, on-prem enterprise
 catalogues, university course toolkits, government-domain-locked
-software — the de-facto pattern is `curl | sh`, hand-rolled per project.
+software) the de-facto pattern is `curl | sh`, hand-rolled per project.
 
 This project gives you that pattern **once**, hardened and reusable:
 
@@ -163,14 +163,14 @@ Headline guarantees:
   reverse-order rollback.
 
 Pending hardening: SHA256-pinned bootstrap, sigstore signatures,
-reproducible bundle output — see
+reproducible bundle output. See
 [`SPEC.md` §4 Phase F + Phase H](SPEC.md#phase-f--signed-releases).
 
 ## Documentation
 
 | Doc | Covers |
 |---|---|
-| [`SPEC.md`](SPEC.md) | **The spec + standing agent prompt** — read this first if you're contributing. |
+| [`SPEC.md`](SPEC.md) | **The spec + standing agent prompt.** Read this first if you're contributing. |
 | [`docs/config-schema.md`](docs/config-schema.md) | Registry shape: products, versions, prompts, post-install, rate limits, access control. |
 | [`docs/security.md`](docs/security.md) | Threat model + mitigations. |
 | [`docs/vendoring.md`](docs/vendoring.md) | How to drop this folder into another project. |
@@ -213,4 +213,4 @@ Headline phases:
 
 ## License
 
-MIT — see [`LICENSE`](LICENSE).
+MIT. See [`LICENSE`](LICENSE).

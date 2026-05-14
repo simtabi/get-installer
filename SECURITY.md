@@ -36,8 +36,8 @@ within **30 days** with a fix-or-mitigation plan.
   Those should be reported to the upstream maintainer; we'll
   yank/deprecate the affected version in the registry once a
   disclosure becomes public.
-- Issues in the Phase M sibling admin repo (`get-installer-admin`)
-  — that repo has its own `SECURITY.md`.
+- Issues in the Phase M sibling admin repo (`get-installer-admin`).
+  That repo has its own `SECURITY.md`.
 - The customer's own infrastructure (their CDN, their DB, their
   Cloudflare account). We document hardening but don't own the
   deployment.

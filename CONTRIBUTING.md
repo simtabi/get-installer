@@ -5,9 +5,9 @@ that keep the codebase consistent.
 
 ## Read first
 
-- [`SPEC.md`](SPEC.md) — design spec + standing prompt for any
+- [`SPEC.md`](SPEC.md): design spec + standing prompt for any
   coding agent. Read it end-to-end before opening a PR.
-- [`docs/security.md`](docs/security.md) — threat model. Required
+- [`docs/security.md`](docs/security.md): threat model. Required
   reading for changes touching `verify.py`, the bootstrap scripts,
   or anything network-facing.
 
@@ -34,7 +34,7 @@ These keep the surface area small and predictable.
 
 1. **Stdlib only.** No runtime dependencies. Dev-tools (pytest, ruff,
    mypy) live under `optional-dependencies.dev`.
-2. **The Python core is parameterised by `registry.json`** — no
+2. **The Python core is parameterised by `registry.json`.** No
    per-product logic in `src/`. New behaviour goes in the schema +
    the engine, not in special-cased branches.
 3. **Bootstrap launchers stay thin.** `bootstrap/install.sh` and
@@ -65,7 +65,7 @@ These keep the surface area small and predictable.
 - Body explains why, not what.
 - No emoji, no `Co-Authored-By` trailers (unless asked).
 - AI-tells (`leverage`, `seamless`, `essentially`, `note that`,
-  `simply,`, `comprehensive`, `robust`) are blocked — write plainly.
+  `simply,`, `comprehensive`, `robust`) are blocked. Write plainly.
 
 ## Multi-arch by default
 
