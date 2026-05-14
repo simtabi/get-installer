@@ -1,6 +1,6 @@
 # AWS deployment
 
-For when one VPS isn't enough — multi-region, auto-scaling, or
+For when one VPS isn't enough: multi-region, auto-scaling, or
 compliance reasons.
 
 ## Architecture

@@ -16,7 +16,7 @@ container over an outbound mTLS connection.
    - Subdomain: `get`
    - Domain: `simtabi.com` (or your domain)
    - Service: `HTTP` → `get:80`
-3. **Save** — Cloudflare auto-provisions DNS + the TLS cert.
+3. **Save**: Cloudflare auto-provisions DNS + the TLS cert.
 
 ## `.env` entry
 
@@ -52,7 +52,7 @@ docker compose logs --tail=20 get
 - No port-forwarding through home / corporate NAT.
 - TLS terminated and DDoS-filtered at Cloudflare's edge.
 - The `User-Agent`-parity guarantee (see `docs/security.md`) is easier
-  to verify because the edge serves identical bytes — Cloudflare's
+  to verify because the edge serves identical bytes: Cloudflare's
   cache doesn't vary on UA by default.
 - The token can be rotated from the dashboard without touching the
   host.

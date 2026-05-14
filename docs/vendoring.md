@@ -4,7 +4,7 @@ The whole `get-installer/` folder is **self-contained**. You vendor it
 into another project by copying the directory and editing one file
 (`registry.json`).
 
-## Step 1 — Copy
+## Step 1: Copy
 
 ```bash
 # From this repo:
@@ -15,7 +15,7 @@ Or via git subtree / sparse-checkout if you want to track upstream
 changes. The installer has zero runtime deps beyond Python stdlib so
 plain `cp` is fine.
 
-## Step 2 — Edit `registry.json`
+## Step 2: Edit `registry.json`
 
 ```json
 {
@@ -48,16 +48,16 @@ plain `cp` is fine.
 
 Full field reference: [`config-schema.md`](config-schema.md).
 
-## Step 3 — Edit the bootstrap defaults
+## Step 3: Edit the bootstrap defaults
 
 If you want a one-liner like
 `sh -c "$(curl -fsSL https://get.simtabi.com/your-tool.sh)"`,
 host `install.sh` + `installer.py` + `registry.json` at that URL.
-The default `INSTALLER_BASE_URL` is `https://get.simtabi.com`
-— change the constant near the top of `install.sh` (and the param
+The default `INSTALLER_BASE_URL` is `https://get.simtabi.com`.
+Change the constant near the top of `install.sh` (and the param
 default in `install.ps1`) if you host elsewhere.
 
-## Step 4 — Test
+## Step 4: Test
 
 ```bash
 python -m get_installer --list
@@ -70,7 +70,7 @@ Run the suite:
 pytest tests/
 ```
 
-## Step 5 — Distribute
+## Step 5: Distribute
 
 Two endpoints:
 
@@ -92,7 +92,7 @@ or `-InstallerSha256` parameter (PowerShell) for tamper detection.
 | `tests/*.py` | Cover the engine, not your registry. |
 
 If you find yourself wanting to fork `core/`, surface that upstream
-first — most reasonable extensions belong in the engine itself, not
+first: most reasonable extensions belong in the engine itself, not
 in per-project forks.
 
 ## Compatibility promise

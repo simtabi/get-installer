@@ -108,7 +108,7 @@ page is the prose summary.
 | `unsupported` | Refuses unless `--allow-unsupported` is passed. |
 | `yanked` | Refuses always. Use for security-revoked or broken releases. |
 
-Add a `status_reason` to explain why — surfaced in the warning/error.
+Add a `status_reason` to explain why: surfaced in the warning/error.
 
 ### Optional fields
 
@@ -140,7 +140,7 @@ these to **any HTTP fetch it does after the bootstrap layer** (e.g.,
 optional content downloads, signature lookups). The `install.sh` /
 `install.ps1` bootstrap stage uses its own simpler retry policy.
 
-`max_total_seconds` caps the entire install run, not per-request — a
+`max_total_seconds` caps the entire install run, not per-request: a
 wall-clock deadline. After it expires, the next fetch refuses with a
 `SecurityError`.
 
@@ -165,7 +165,7 @@ wall-clock deadline. After it expires, the next fetch refuses with a
 | `allowed_origins` | https:// prefix list. Any fetch the Python core does must start with one of these. Empty list ⇒ no Python-side fetches permitted (the bootstrap is unaffected). |
 | `log_mode` | Octal mode (as integer) for the journal log file. `384` = `0o600` = owner only. |
 | `tmp_mode` | Same, for downloaded temp files. |
-| `refuse_symlink_targets_outside` | When true, follow-symlink operations refuse targets escaping their expected dir. (Currently advisory — used by future content_repo features.) |
+| `refuse_symlink_targets_outside` | When true, follow-symlink operations refuse targets escaping their expected dir. (Currently advisory: used by future content_repo features.) |
 
 ## Adding a product
 

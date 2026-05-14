@@ -47,7 +47,7 @@ mkcert -cert-file deploy/certs/get.test.pem -key-file deploy/certs/get.test-key.
 Cheapest option: Caddy in front of the container.
 
 ```yaml
-# docker-compose.override.yml — gitignored
+# docker-compose.override.yml: gitignored
 services:
   caddy:
     image: caddy:2

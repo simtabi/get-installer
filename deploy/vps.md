@@ -25,7 +25,7 @@ git clone https://github.com/simtabi/get-installer.git
 cd get-installer
 
 cp .env.example .env
-# Edit .env — set PG_PASSWORD, GET_INSTALLER_TOKEN_SECRET,
+# Edit .env: set PG_PASSWORD, GET_INSTALLER_TOKEN_SECRET,
 # CLOUDFLARE_TUNNEL_TOKEN
 
 python3 scripts/bundle.py             # builds dist/installer.py
@@ -63,7 +63,7 @@ docker compose up -d --build
 ## Operational notes
 
 - **Logs**: `docker compose logs -f get` for nginx, ditto for
-  `cloudflared`. The container streams everything to stdout/stderr —
+  `cloudflared`. The container streams everything to stdout/stderr;
   no log files to rotate inside.
 - **Backups**: only `postgres` carries state. `docker compose exec
   postgres pg_dump -U $PG_USER $PG_DB > backup.sql` on a cron.

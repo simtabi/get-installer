@@ -6,19 +6,19 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
-### Added — Homebrew tap distribution channel
+### Added: Homebrew tap distribution channel
 
-- `templates/homebrew-formula.rb.template` — scaffold for the
+- `templates/homebrew-formula.rb.template`: scaffold for the
   `simtabi/homebrew-tap` formulae. Includes placeholders documented
   inline and a `test do` block with version-assertion stub.
-- `docs/distribution/homebrew.md` — walks the one-time tap setup
+- `docs/distribution/homebrew.md`: walks the one-time tap setup
   (`brew tap-new`, `brew create --python`,
   `brew update-python-resources`) plus the release-time workflow that
   bumps the formula on every tag.
 - Ported from `simtabi/shimkit/installer/homebrew-formula.rb.template`,
   generalized so any product in `registry.json` can land in the tap.
 
-### Added — bootstrap `--bootstrap-uv` flag
+### Added: bootstrap `--bootstrap-uv` flag
 
 - `bootstrap/install.sh` accepts `--bootstrap-uv` for users on a
   machine with no Python 3.10+ and no uv. Opt-in only; curl-pipes
@@ -33,9 +33,9 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   drives the no-Python branch and asserts every URL surfaces; flag
   presence asserts parse-clean.
 
-### Added — bootstrap test coverage (closes §5 I12 + I13)
+### Added: bootstrap test coverage (closes §5 I12 + I13)
 
-- `tests/test_bootstrap_launchers.py` — 6 tests covering both launcher
+- `tests/test_bootstrap_launchers.py`: 6 tests covering both launcher
   syntax (`bash -n`, `sh -n`, `pwsh` parse) and end-to-end flow
   against a local HTTP server: SHA-pin match succeeds, SHA-pin
   mismatch aborts BEFORE running `installer.py`, no-pin path warns
@@ -44,25 +44,25 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   (test-only) so the fixture can serve over local HTTP. Loud-warns
   to stderr when set so production usage is visible.
 
-### Added — CI: ARM + reproducibility + Docker multi-arch build
+### Added: CI: ARM + reproducibility + Docker multi-arch build
 
 - `.github/workflows/ci.yml` matrix expanded to:
   `ubuntu-latest` (amd64), `ubuntu-24.04-arm` (arm64),
-  `macos-latest` (Apple Silicon), `macos-13` (Intel), `windows-latest`
-  — coverage on every PR for amd64 + arm64 + Intel macOS.
+  `macos-latest` (Apple Silicon), `macos-13` (Intel), `windows-latest`.
+  Coverage on every PR for amd64 + arm64 + Intel macOS.
 - New `bundle` job step verifies byte-reproducibility by building
   twice and `cmp -s`-ing the output. Fails the workflow if the bundle
   drifts (catches future regressions of the timestamp-in-body kind).
 - New `docker-multiarch` job builds the Dockerfile for both
   `linux/amd64` and `linux/arm64` via buildx + QEMU on every PR.
 
-### Added — multi-arch + repo essentials
+### Added: multi-arch + repo essentials
 
 - `Dockerfile` now declares `BUILDPLATFORM`, `TARGETPLATFORM`,
   `TARGETARCH` build ARGs and uses `--platform=$TARGETPLATFORM` on the
   `FROM` line. Builds for `linux/amd64` AND `linux/arm64` from the
   same recipe.
-- `scripts/build-multiarch.sh` — buildx wrapper that sets up the
+- `scripts/build-multiarch.sh`: buildx wrapper that sets up the
   builder, handles `--load` vs `--push`, and detects host arch for
   local single-arch loads.
 - `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md` (Contributor Covenant 2.1),
@@ -75,10 +75,10 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   ships as a manifest list covering both `linux/amd64` and
   `linux/arm64`.
 
-### Added — Phase C (remote registry source)
+### Added: Phase C (remote registry source)
 
 - `Registry.from_url(url, *, auth_token, fallback_path, cache_dir,
-  cache_max_age_seconds, allowed_origins, timeout)` — loads a
+  cache_max_age_seconds, allowed_origins, timeout)`: loads a
   registry from an HTTPS URL with TTL'd disk cache, falls back to
   a local file on fetch failure, enforces the access-control
   origin allowlist.
@@ -99,10 +99,10 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 - §5 issue **I11**: `allowed_origins` allowlist was dead code (no
   caller of `verify.fetch_https` from the Python side). Resolved by
-  Phase C — `Registry.from_url` is now the live caller and passes
+  Phase C: `Registry.from_url` is now the live caller and passes
   the allowlist through.
 
-## [0.1.0] — 2026-05-14
+## [0.1.0] - 2026-05-14
 
 Initial release as a standalone project. Previously shipped inside
 `simtabi/claude-configs` at `installer/`.
