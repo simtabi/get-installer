@@ -105,7 +105,7 @@ jobs:
       - name: Build bundle (needed by Dockerfile)
         run: python scripts/bundle.py
       - name: Build for amd64 + arm64
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: ./Dockerfile
