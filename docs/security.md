@@ -198,6 +198,6 @@ Servers should:
 
 ## Reporting a vulnerability
 
-See [`../../SECURITY.md`](../../SECURITY.md). Disclosure goes to
+See [`../SECURITY.md`](../SECURITY.md). Disclosure goes to
 `opensource@simtabi.com`. Don't open a public issue for security
 problems.

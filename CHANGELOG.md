@@ -173,7 +173,7 @@ Initial release as a standalone project. Previously shipped inside
 - CLI: `simtabi-installer` → `get-installer`.
 - Schema: `install.schema.json` → `registry.schema.json`.
 
-### Pending (see [`SPEC.md`](SPEC.md))
+### Pending (see [`docs/SPEC.md`](docs/SPEC.md))
 - Remote API registry source (DB-backed; JSON as fallback).
 - Multi-forge metadata in the registry (GitHub / GitLab / Bitbucket /
   Gitea / generic git).

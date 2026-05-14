@@ -5,7 +5,7 @@ that keep the codebase consistent.
 
 ## Read first
 
-- [`SPEC.md`](SPEC.md): design spec + standing prompt for any
+- [`docs/SPEC.md`](docs/SPEC.md): design spec + standing prompt for any
   coding agent. Read it end-to-end before opening a PR.
 - [`docs/security.md`](docs/security.md): threat model. Required
   reading for changes touching `verify.py`, the bootstrap scripts,

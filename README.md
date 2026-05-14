@@ -176,7 +176,7 @@ and [`docs/security.md`](docs/security.md) for the full threat model.
 
 | Doc | Covers |
 |---|---|
-| [`SPEC.md`](SPEC.md) | **The spec + standing agent prompt.** Read this first if you're contributing. |
+| [`docs/SPEC.md`](docs/SPEC.md) | **The spec + standing agent prompt.** Read this first if you're contributing. |
 | [`docs/config-schema.md`](docs/config-schema.md) | Registry shape: products, versions, prompts, post-install, rate limits, access control. |
 | [`docs/security.md`](docs/security.md) | Threat model + mitigations. |
 | [`docs/vendoring.md`](docs/vendoring.md) | How to drop this folder into another project. |
