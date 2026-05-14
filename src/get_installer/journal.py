@@ -4,7 +4,7 @@ Every state-changing step records a ``JournalEntry`` with an ``undo``
 callback. On signal (SIGINT/SIGTERM) or unhandled exception, the
 installer walks the journal in reverse and invokes each ``undo``.
 
-Failures inside ``undo`` are logged but do not abort the rollback —
+Failures inside ``undo`` are logged but do not abort the rollback:
 we want to get as much cleanup done as possible.
 """
 
@@ -52,7 +52,7 @@ class Journal:
         return count
 
     def commit(self) -> None:
-        """Mark every recorded action as final — clears the journal so rollback is a no-op."""
+        """Mark every recorded action as final: clears the journal so rollback is a no-op."""
         self._entries.clear()
 
     def __len__(self) -> int:
@@ -72,7 +72,7 @@ class Journal:
     def write_file(self, path: Path, content: bytes, *, mode: int = 0o600) -> None:
         """Atomically write ``content`` to ``path`` with explicit ``mode``.
 
-        Default ``mode`` is ``0o600`` — owner-only — because installer-
+        Default ``mode`` is ``0o600``: owner-only: because installer-
         written content tends to be private (logs, intermediate state).
         Callers that need a wider mode (e.g., a generated `install.sh`
         an end user must execute) pass ``mode=0o644``.
@@ -106,7 +106,7 @@ class Journal:
 
     def pipx_install(self, package: str) -> None:
         def undo() -> None:
-            # Best effort — uninstall if pipx is around.
+            # Best effort: uninstall if pipx is around.
             if shutil.which("pipx"):
                 subprocess.run(
                     ["pipx", "uninstall", package],
@@ -163,7 +163,7 @@ class Journal:
 
         Uses ``O_CREAT|O_EXCL`` + the given mode so other users on the
         machine can't read it (a tmp-dir hijack would otherwise win the
-        race). Default ``mode`` is 0600 — owner only.
+        race). Default ``mode`` is 0600: owner only.
         """
         path.parent.mkdir(parents=True, exist_ok=True)
         if path.exists():

@@ -287,7 +287,7 @@ def test_list_products_sorts_versions_desc(
 def test_post_install_rejects_shell_wrapper_with_dash_c(
     tmp_path: Path, base_registry: dict, cmd0: str
 ) -> None:
-    """``["sh", "-c", "payload"]`` undoes shell=False — refuse it."""
+    """``["sh", "-c", "payload"]`` undoes shell=False: refuse it."""
     base_registry["products"]["demo"]["versions"]["1.0.0"]["post_install"] = [
         {"argv": [cmd0, "-c", "echo hi"]}
     ]
@@ -299,7 +299,7 @@ def test_post_install_rejects_shell_wrapper_with_dash_c(
 def test_post_install_allows_shell_wrapper_without_dash_c(
     tmp_path: Path, base_registry: dict
 ) -> None:
-    """``["bash", "/path/to/script.sh"]`` is fine — no ``-c``, no shell interp."""
+    """``["bash", "/path/to/script.sh"]`` is fine: no ``-c``, no shell interp."""
     base_registry["products"]["demo"]["versions"]["1.0.0"]["post_install"] = [
         {"argv": ["bash", "/path/to/script.sh"]}
     ]

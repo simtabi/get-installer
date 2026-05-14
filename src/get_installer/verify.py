@@ -56,7 +56,7 @@ def fetch_https(
 
     ``extra_headers`` are added to the request alongside the default
     ``User-Agent``. Use this to pass ``Authorization: Bearer …`` for
-    authenticated registries. The values are sent verbatim — caller is
+    authenticated registries. The values are sent verbatim: caller is
     responsible for not putting newlines in them (header injection).
     """
     if not url.startswith("https://"):
@@ -177,7 +177,7 @@ def refuse_root(allow: bool = False) -> None:
     if hasattr(os, "geteuid") and os.geteuid() == 0:
         raise SecurityError(
             "refusing to run as root. If you really mean it, pass --allow-root.\n"
-            "Most installs should run as the target user — root installs leave "
+            "Most installs should run as the target user: root installs leave "
             "files owned by root and break later runs."
         )
 
@@ -186,7 +186,7 @@ def check_path_injection() -> list[str]:
     """Return a list of warnings for risky PATH entries.
 
     World-writable entries in PATH let a local attacker shadow `python`, `pipx`,
-    `git`, etc. with a malicious binary. We warn but don't refuse — common
+    `git`, etc. with a malicious binary. We warn but don't refuse: common
     enough on dev machines that hard-failing would be annoying.
     """
     warnings: list[str] = []

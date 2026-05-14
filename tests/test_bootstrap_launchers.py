@@ -1,6 +1,6 @@
 """Integration tests for the bootstrap launchers (Phase J / §5 I12, I13).
 
-We don't need actual network access — a local ``http.server`` thread
+We don't need actual network access: a local ``http.server`` thread
 serves the artefacts and we set ``INSTALLER_BASE_URL`` to point at it.
 The launcher should still verify the SHA when ``INSTALLER_SHA256`` is
 set.
@@ -43,7 +43,7 @@ def test_install_sh_passes_bash_syntax_check() -> None:
 
 @pytest.mark.skipif(shutil.which("sh") is None, reason="sh not on PATH")
 def test_install_sh_passes_sh_syntax_check() -> None:
-    """The script claims POSIX sh compatibility — verify it parses under sh."""
+    """The script claims POSIX sh compatibility: verify it parses under sh."""
     r = subprocess.run(
         ["sh", "-n", str(INSTALL_SH)],
         capture_output=True, text=True, check=False,
@@ -126,7 +126,7 @@ def test_install_sh_succeeds_when_sha_matches(mock_distribution) -> None:
         **os.environ,
         "INSTALLER_BASE_URL": base_url,
         "INSTALLER_SHA256": sha,
-        "INSTALLER_PROTO_OVERRIDE": "-all,+http",  # test-only — see install.sh
+        "INSTALLER_PROTO_OVERRIDE": "-all,+http",  # test-only: see install.sh
         "SHELL_OK": "1",
     }
     r = subprocess.run(

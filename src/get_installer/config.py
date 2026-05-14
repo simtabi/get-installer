@@ -8,7 +8,7 @@ prompts, post-install commands, etc.).
 The installer takes a registry + a ``(product, version)`` selector and
 resolves to a single ``InstallConfig`` it knows how to run.
 
-Stdlib-only — no jsonschema dependency. We hand-validate the shape we
+Stdlib-only: no jsonschema dependency. We hand-validate the shape we
 consume and rely on the JSON schema (see ``schemas/``) as the
 authoritative reference for the format.
 """
@@ -114,7 +114,7 @@ class ContentRepo:
 
 @dataclass(frozen=True)
 class InstallConfig:
-    """Resolved single-version config — what the Installer consumes."""
+    """Resolved single-version config: what the Installer consumes."""
 
     product: str
     version: str
@@ -165,7 +165,7 @@ class ProductSummary:
 
 
 # ---------------------------------------------------------------------------
-# Registry — many products, many versions, with resolution logic
+# Registry: many products, many versions, with resolution logic
 # ---------------------------------------------------------------------------
 
 
@@ -215,10 +215,10 @@ class Registry:
 
         ``auth_token`` is sent as ``Authorization: Bearer <token>``. The
         token can also come from the ``GET_INSTALLER_TOKEN`` env var
-        when not passed explicitly — that lookup happens in the CLI, not
+        when not passed explicitly: that lookup happens in the CLI, not
         here, so library users have to be explicit.
 
-        The cache key is sha256 of the URL — so different URLs cache
+        The cache key is sha256 of the URL: so different URLs cache
         independently, and the same URL hits the same file.
         """
         import time as _time
@@ -238,7 +238,7 @@ class Registry:
                         data = json.loads(cache_path.read_text(encoding="utf-8"))
                         return cls.from_dict(data, source_path=cache_path)
                     except json.JSONDecodeError:
-                        # Corrupt cache — fall through to refetch
+                        # Corrupt cache: fall through to refetch
                         cache_path.unlink()
 
         # Network fetch via the hardened helper
@@ -298,7 +298,7 @@ class Registry:
                 try:
                     tmp.replace(cache_path)
                 except OSError:
-                    # Best effort — don't fail the load over cache write
+                    # Best effort: don't fail the load over cache write
                     with _ctx2.suppress(OSError):
                         tmp.unlink()
             else:
@@ -334,7 +334,7 @@ class Registry:
             if not re.fullmatch(r"[a-z][a-z0-9-]{1,63}", name):
                 raise ConfigError(f"invalid product slug: {name!r}")
 
-        # Rate limits — all fields optional
+        # Rate limits: all fields optional
         rl_raw = data.get("rate_limits") or {}
         if not isinstance(rl_raw, dict):
             raise ConfigError("rate_limits must be an object")
@@ -546,7 +546,7 @@ def _build_install_config(
         for j, arg in enumerate(argv):
             if not isinstance(arg, str):
                 raise ConfigError(f"{prefix}: post_install[{i}].argv[{j}] must be a string")
-        # argv[0] is the command name — it should be a bare executable name
+        # argv[0] is the command name: it should be a bare executable name
         # or absolute path. Reject the textbook shell-wrapper pattern
         # ``["sh", "-c", "...payload..."]`` because that turns argv into a
         # de-facto shell string and undoes the shell=False contract.
@@ -560,7 +560,7 @@ def _build_install_config(
                 f"{prefix}: post_install[{i}] uses shell-wrapper form "
                 f"({cmd0} -c …); pass commands as argv arrays instead."
             )
-        # Reject control characters in any argv element — they shouldn't
+        # Reject control characters in any argv element: they shouldn't
         # appear in a legitimate command line and they hint at injection.
         for j, arg in enumerate(argv):
             if any(ord(c) < 0x20 and c not in "\t" for c in arg):
@@ -678,7 +678,7 @@ _SEMVER_RE = re.compile(r"([0-9]+)\.([0-9]+)\.([0-9]+)(?:[+-](.+))?")
 
 
 def _semver_key(version: str) -> tuple[int, int, int, int, str]:
-    """Sort key for semvers — releases > prereleases of the same triple."""
+    """Sort key for semvers: releases > prereleases of the same triple."""
     m = _SEMVER_RE.fullmatch(version)
     if not m:
         return (0, 0, 0, 0, version)

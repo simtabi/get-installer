@@ -54,8 +54,8 @@ def test_make_dir_undo_removes_only_what_we_created(tmp_path: Path) -> None:
     pre_existing = tmp_path / "kept"
     pre_existing.mkdir()
     j = Journal()
-    j.make_dir(pre_existing)            # no-op — directory existed
-    j.make_dir(tmp_path / "fresh")      # created — undo deletes
+    j.make_dir(pre_existing)            # no-op: directory existed
+    j.make_dir(tmp_path / "fresh")      # created: undo deletes
     j.rollback()
     assert pre_existing.exists()
     assert not (tmp_path / "fresh").exists()

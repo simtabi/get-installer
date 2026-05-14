@@ -1,5 +1,5 @@
 #!/usr/bin/env sh
-# Simtabi installer — POSIX bootstrap (sh-compatible, runs on bash/dash/zsh).
+# Simtabi installer: POSIX bootstrap (sh-compatible, runs on bash/dash/zsh).
 #
 # Usage (one-liner):
 #   sh -c "$(curl -fsSL https://get.simtabi.com/install.sh)"
@@ -8,7 +8,7 @@
 #   curl -fsSL https://get.simtabi.com/install.sh \
 #     | sh -s -- --product claude-configurator --version 0.2.0 --yes
 #
-# Everything happens via Python — this shell layer only:
+# Everything happens via Python: this shell layer only:
 #   1. Verifies Python >= 3.10 is on PATH.
 #   2. Downloads installer.py + registry.json into a private temp dir.
 #   3. Verifies the SHA256 of installer.py against INSTALLER_SHA256 below.
@@ -141,10 +141,10 @@ info "Python ${PYTHON_VERSION} at $(command -v "$PYTHON_BIN" 2>/dev/null || echo
 # By default, curl restricts to HTTPS + TLS 1.2+. The
 # ``INSTALLER_PROTO_OVERRIDE`` env var exists ONLY for the test suite,
 # which serves the artefacts from a local HTTP server. Setting this in
-# production removes the security guarantee — don't.
+# production removes the security guarantee: don't.
 PROTO_OVERRIDE="${INSTALLER_PROTO_OVERRIDE:-}"
 if [ -n "$PROTO_OVERRIDE" ]; then
-  warn "INSTALLER_PROTO_OVERRIDE set — bypassing HTTPS-only guard (test-mode)"
+  warn "INSTALLER_PROTO_OVERRIDE set: bypassing HTTPS-only guard (test-mode)"
 fi
 
 if command -v curl >/dev/null 2>&1; then
@@ -185,7 +185,7 @@ if [ -n "$INSTALLER_SHA256" ]; then
   fi
   info "installer.py sha256 verified"
 else
-  warn "no INSTALLER_SHA256 pin — proceeding without integrity check"
+  warn "no INSTALLER_SHA256 pin: proceeding without integrity check"
 fi
 
 # ----- execute ------------------------------------------------------------- #

@@ -1,4 +1,4 @@
-"""Tests for ``scripts/bundle.py`` — verify the single-file bundle works."""
+"""Tests for ``scripts/bundle.py``: verify the single-file bundle works."""
 
 from __future__ import annotations
 
@@ -64,7 +64,7 @@ def test_bundle_reproducible(tmp_path: Path) -> None:
         capture_output=True, check=True,
     )
     assert a.read_bytes() == b.read_bytes(), \
-        "bundle is not byte-reproducible — check that no timestamp leaked into the body"
+        "bundle is not byte-reproducible: check that no timestamp leaked into the body"
     # The buildinfo sidecar IS allowed to differ (it carries the timestamp)
     assert a.with_suffix(a.suffix + ".buildinfo.json").is_file()
     assert b.with_suffix(b.suffix + ".buildinfo.json").is_file()

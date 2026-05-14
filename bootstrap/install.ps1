@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    Simtabi installer — PowerShell bootstrap.
+    Simtabi installer: PowerShell bootstrap.
 
 .DESCRIPTION
     Downloads installer.py + registry.json and hands off to Python.
@@ -135,7 +135,7 @@ if ($InstallerSha256) {
     }
     Write-Info "installer.py sha256 verified"
 } else {
-    Write-Warn "no -InstallerSha256 pin — proceeding without integrity check"
+    Write-Warn "no -InstallerSha256 pin: proceeding without integrity check"
 }
 
 # ----- execute ----------------------------------------------------------- #

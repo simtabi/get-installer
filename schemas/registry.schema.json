@@ -26,7 +26,7 @@
     "signing": {
       "type": "object",
       "additionalProperties": false,
-      "description": "Optional provenance metadata. Not currently enforced — reserved for future signature support.",
+      "description": "Optional provenance metadata. Not currently enforced: reserved for future signature support.",
       "properties": {
         "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
         "signed_by": { "type": "string" },

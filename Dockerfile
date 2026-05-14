@@ -1,7 +1,7 @@
-# get-installer — static distribution-channel image.
+# get-installer: static distribution-channel image.
 #
 # Serves the installer bytes (install.sh, install.ps1, installer.py,
-# registry.json) over HTTP. Pure read-side — no database, no auth.
+# registry.json) over HTTP. Pure read-side: no database, no auth.
 # Suitable for behind a CDN like Cloudflare / Fastly.
 #
 # Multi-arch: builds for both linux/amd64 and linux/arm64 from the same
@@ -12,7 +12,7 @@
 #       --tag simtabi/get-installer:dev \
 #       --load .
 #
-# Base: Ubuntu 26.04 LTS — official Docker Hub image, multi-arch
+# Base: Ubuntu 26.04 LTS: official Docker Hub image, multi-arch
 # manifest list. Falls back to 24.04 if 26.04 isn't on Docker Hub
 # yet:
 #   docker buildx build --build-arg UBUNTU_TAG=24.04 …
@@ -72,7 +72,7 @@ RUN chmod +x /usr/local/bin/build-aliases.sh && /usr/local/bin/build-aliases.sh
 COPY deploy/nginx.conf /etc/nginx/nginx.conf
 COPY deploy/supervisor-static.conf /etc/supervisor/conf.d/get-installer.conf
 
-# Drop privileges — nginx + supervisor run as the `www-data` user that
+# Drop privileges: nginx + supervisor run as the `www-data` user that
 # Ubuntu ships pre-created.
 USER root
 RUN chown -R www-data:www-data /srv/www \

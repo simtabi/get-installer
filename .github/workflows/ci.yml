@@ -15,13 +15,13 @@ jobs:
       matrix:
         os:
           - ubuntu-latest          # amd64
-          - ubuntu-24.04-arm       # arm64 — GitHub-hosted Linux/ARM runner
+          - ubuntu-24.04-arm       # arm64: GitHub-hosted Linux/ARM runner
           - macos-latest           # arm64 (Apple Silicon)
-          - macos-13               # amd64 (Intel) — keep until 13 retires
+          - macos-13               # amd64 (Intel): keep until 13 retires
           - windows-latest
         python-version: ["3.10", "3.11", "3.12", "3.13"]
         exclude:
-          # macos-13 only needs one Python — it's the Intel-coverage row,
+          # macos-13 only needs one Python: it's the Intel-coverage row,
           # not a full matrix
           - os: macos-13
             python-version: "3.10"
@@ -62,7 +62,7 @@ jobs:
       - name: Verify byte-reproducibility
         run: |
           if ! cmp -s dist/installer.py dist2/installer.py; then
-            echo "::error::Bundle is NOT byte-reproducible — timestamp leaked into body?"
+            echo "::error::Bundle is NOT byte-reproducible: timestamp leaked into body?"
             diff <(head -50 dist/installer.py) <(head -50 dist2/installer.py) || true
             exit 1
           fi

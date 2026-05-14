@@ -76,6 +76,6 @@ def test_refuse_root_blocks_unless_allowed() -> None:
             refuse_root(allow=False)
         refuse_root(allow=True)
     else:
-        # Not root — never raises
+        # Not root: never raises
         refuse_root(allow=False)
         refuse_root(allow=True)

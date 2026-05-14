@@ -1,4 +1,4 @@
-"""Tests for ``Registry.from_url`` — remote registry source (Phase C)."""
+"""Tests for ``Registry.from_url``: remote registry source (Phase C)."""
 
 from __future__ import annotations
 
@@ -81,7 +81,7 @@ def http_fetch(monkeypatch: pytest.MonkeyPatch):
         deadline_seconds=None, allowed_origins=(),
         file_mode=0o600, extra_headers=None,
     ):
-        # Honour the allowlist check even in the fake — that's part of what
+        # Honour the allowlist check even in the fake: that's part of what
         # Phase C plumbing needs to verify.
         if allowed_origins and not any(
             url.startswith(p) for p in allowed_origins
@@ -162,7 +162,7 @@ def test_from_url_uses_cache_when_fresh(
     cache = tmp_path / "cache"
     Registry.from_url(url, cache_dir=cache, cache_max_age_seconds=60)
     first_count = len(headers_log)
-    # Second call within TTL — should NOT hit the server
+    # Second call within TTL: should NOT hit the server
     Registry.from_url(url, cache_dir=cache, cache_max_age_seconds=60)
     assert len(headers_log) == first_count, "second call should have hit cache"
 
@@ -202,7 +202,7 @@ def test_from_url_refresh_bypasses_cache(
 def test_from_url_fallback_on_fetch_failure(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    # No fake fetch — real one. URL won't resolve.
+    # No fake fetch: real one. URL won't resolve.
     fallback = tmp_path / "registry.json"
     fallback.write_text(json.dumps(BASE_REGISTRY))
     reg = Registry.from_url(

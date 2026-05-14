@@ -91,7 +91,7 @@ class Installer:
             self._phase_plan()
             if self.dry_run:
                 self.ui.summary_box(
-                    ["dry-run complete — no changes made"],
+                    ["dry-run complete: no changes made"],
                     title=self.config.product,
                 )
                 return InstallReport(success=True)
@@ -297,7 +297,7 @@ class Installer:
         return ran
 
     def _gate_passes(self, step: PostInstallStep) -> bool:
-        """``step.if_expr`` is ``key=value`` — passes when answer matches."""
+        """``step.if_expr`` is ``key=value``: passes when answer matches."""
         if step.if_expr is None:
             return True
         key, _, expected = step.if_expr.partition("=")

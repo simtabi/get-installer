@@ -48,7 +48,7 @@ MODULE_ORDER = (
 HEADER_TEMPLATE = '''\
 #!/usr/bin/env python3
 # ----------------------------------------------------------------------------
-# get-installer — single-file bundle
+# get-installer: single-file bundle
 #
 # Generated automatically. Do not edit. Modify ``src/get_installer/`` and run
 # ``scripts/bundle.py`` to regenerate.
@@ -58,10 +58,10 @@ HEADER_TEMPLATE = '''\
 # Source sha256: {source_sha}
 #
 # The build timestamp lives in the sidecar ``installer.py.buildinfo.json``
-# next to this file — keeping it out of the bundle body makes the bundle
+# next to this file: keeping it out of the bundle body makes the bundle
 # reproducible (same source bytes -> same bundle bytes).
 # ----------------------------------------------------------------------------
-"""Reusable installer for Simtabi dev tools — bundled single-file form.
+"""Reusable installer for Simtabi dev tools: bundled single-file form.
 
 This file is functionally equivalent to ``python -m get_installer``. It
 exists so the bootstrap launcher can download one Python file from
@@ -87,7 +87,7 @@ if __name__ == "__main__":
 def _collect_top_level_imports(source: str) -> set[str]:
     """Return every ``import X`` / ``from <abs.module> import Y`` at top level.
 
-    Excludes intra-package (``from .X``) and ``__future__`` imports — those
+    Excludes intra-package (``from .X``) and ``__future__`` imports: those
     don't belong in the bundle.
     """
     out: set[str] = set()
@@ -115,7 +115,7 @@ def _collect_top_level_imports(source: str) -> set[str]:
 def _module_body_only(source: str) -> str:
     """Return source with top-level imports + module docstring stripped.
 
-    Uses AST line numbers to slice — robust to multi-line imports like
+    Uses AST line numbers to slice: robust to multi-line imports like
     ``from .verify import (\n    A, B, C,\n)``.
     """
     lines = source.splitlines(keepends=True)
@@ -133,7 +133,7 @@ def _module_body_only(source: str) -> str:
             for i in range(start, end + 1):
                 skip.add(i)
         else:
-            break  # first non-import / non-docstring node — stop scanning
+            break  # first non-import / non-docstring node: stop scanning
 
     kept = "".join(line for i, line in enumerate(lines) if i not in skip)
     # Collapse leading blank lines for tidier output
@@ -223,7 +223,7 @@ def main() -> int:
     sha = hashlib.sha256(text.encode("utf-8")).hexdigest()
     (args.output.parent / (args.output.name + ".sha256")).write_text(sha + "\n", encoding="utf-8")
 
-    # Build metadata in a sidecar — keeping it out of the bundle body
+    # Build metadata in a sidecar: keeping it out of the bundle body
     # keeps the bundle byte-reproducible across builds.
     import json
     buildinfo = {

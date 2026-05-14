@@ -54,7 +54,7 @@ services:
 
   # ----- Cloudflare Tunnel sidecar (optional) ------------------------------
   # Boots only when CLOUDFLARE_TUNNEL_TOKEN is set. Exposes the `get`
-  # service over an HTTPS zero-trust tunnel — no inbound ports.
+  # service over an HTTPS zero-trust tunnel: no inbound ports.
   cloudflared:
     image: cloudflare/cloudflared:latest
     container_name: get-installer-tunnel

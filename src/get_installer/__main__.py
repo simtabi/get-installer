@@ -136,7 +136,7 @@ def _default_registry_path() -> Path:
       2. ``./registry.json`` (cwd)
       3. Walk parents of this module looking for ``registry.json``
 
-    Returns the cwd path even if missing — `Registry.load` raises a clean
+    Returns the cwd path even if missing: `Registry.load` raises a clean
     error citing the missing file.
     """
     env = os.environ.get("GET_INSTALLER_REGISTRY")
@@ -241,7 +241,7 @@ def _print_listing(ui: UI, registry: Registry) -> None:
         f"updated {registry.registry_updated}  schema v{registry.schema_version}",
     )
     for product in registry.list_products():
-        ui.print(f"\n{ui.BOLD}{product.name}{ui.RESET}  {ui.DIM}— {product.summary}{ui.RESET}")
+        ui.print(f"\n{ui.BOLD}{product.name}{ui.RESET}  {ui.DIM}: {product.summary}{ui.RESET}")
         ui.print(f"  default: {product.default_version}")
         ui.print(f"  platforms: {', '.join(product.supported_platforms)}")
         ui.print("  versions:")
