@@ -1,0 +1,42 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+env/
+
+# Test / type-check caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# OS noise
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# Editor
+.vscode/
+.idea/
+
+# Local
+*.log
+*.pem
+*.key
+*.token
+*.secret
+.env
+.env.*
+
+# Claude Code per-machine + per-repo state
+.claude/settings.local.json
+.claude/sessions/
+.claude/history.jsonl
+.claude/cache/

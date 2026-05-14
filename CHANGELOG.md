@@ -1,0 +1,117 @@
+# Changelog
+
+All notable changes to this project will be documented in this file.
+Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
+This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
+
+### Added — bootstrap test coverage (closes §5 I12 + I13)
+
+- `tests/test_bootstrap_launchers.py` — 6 tests covering both launcher
+  syntax (`bash -n`, `sh -n`, `pwsh` parse) and end-to-end flow
+  against a local HTTP server: SHA-pin match succeeds, SHA-pin
+  mismatch aborts BEFORE running `installer.py`, no-pin path warns
+  and proceeds.
+- `bootstrap/install.sh` gained `INSTALLER_PROTO_OVERRIDE` env var
+  (test-only) so the fixture can serve over local HTTP. Loud-warns
+  to stderr when set so production usage is visible.
+
+### Added — CI: ARM + reproducibility + Docker multi-arch build
+
+- `.github/workflows/ci.yml` matrix expanded to:
+  `ubuntu-latest` (amd64), `ubuntu-24.04-arm` (arm64),
+  `macos-latest` (Apple Silicon), `macos-13` (Intel), `windows-latest`
+  — coverage on every PR for amd64 + arm64 + Intel macOS.
+- New `bundle` job step verifies byte-reproducibility by building
+  twice and `cmp -s`-ing the output. Fails the workflow if the bundle
+  drifts (catches future regressions of the timestamp-in-body kind).
+- New `docker-multiarch` job builds the Dockerfile for both
+  `linux/amd64` and `linux/arm64` via buildx + QEMU on every PR.
+
+### Added — multi-arch + repo essentials
+
+- `Dockerfile` now declares `BUILDPLATFORM`, `TARGETPLATFORM`,
+  `TARGETARCH` build ARGs and uses `--platform=$TARGETPLATFORM` on the
+  `FROM` line. Builds for `linux/amd64` AND `linux/arm64` from the
+  same recipe.
+- `scripts/build-multiarch.sh` — buildx wrapper that sets up the
+  builder, handles `--load` vs `--push`, and detects host arch for
+  local single-arch loads.
+- `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md` (Contributor Covenant 2.1),
+  `SECURITY.md` (disclosure to `opensource@simtabi.com`), and
+  `.editorconfig` added to match the Simtabi-org required-files
+  baseline.
+- `MANIFEST.in` for belt-and-braces sdist-content control.
+- SPEC.md Phase K rewritten as "Containerization + portable
+  deployment (multi-arch)" with a hard requirement that every image
+  ships as a manifest list covering both `linux/amd64` and
+  `linux/arm64`.
+
+### Added — Phase C (remote registry source)
+
+- `Registry.from_url(url, *, auth_token, fallback_path, cache_dir,
+  cache_max_age_seconds, allowed_origins, timeout)` — loads a
+  registry from an HTTPS URL with TTL'd disk cache, falls back to
+  a local file on fetch failure, enforces the access-control
+  origin allowlist.
+- `verify.fetch_https` gained an `extra_headers` parameter for
+  authenticated requests. Values containing CR/LF raise
+  `SecurityError` (HTTP header-injection guard).
+- CLI flags `--auth-token` (also reads `$GET_INSTALLER_TOKEN`),
+  `--cache-dir`, `--refresh`. `--registry` now accepts both a path
+  and an `https://` URL.
+- 11 new pytest cases in `tests/test_remote_registry.py`.
+
+### Changed
+
+- `--registry` type changed from `Path` to `str` so URLs work.
+  Behaviour for path inputs is unchanged.
+
+### Fixed
+
+- §5 issue **I11**: `allowed_origins` allowlist was dead code (no
+  caller of `verify.fetch_https` from the Python side). Resolved by
+  Phase C — `Registry.from_url` is now the live caller and passes
+  the allowlist through.
+
+## [0.1.0] — 2026-05-14
+
+Initial release as a standalone project. Previously shipped inside
+`simtabi/claude-configs` at `installer/`.
+
+### Added
+- Registry-driven `curl | sh` installer for distributing Simtabi (and
+  vendor-able to any) dev tools.
+- Schema v2 registry with multi-product, multi-version layout.
+- Per-version `status` (`current` / `deprecated` / `unsupported` /
+  `yanked`) with policy enforcement.
+- `Journal` rollback / garbage-collector for clean abort on signal or
+  exception.
+- Bootstrap launchers: POSIX `install.sh` (sh-compatible) +
+  PowerShell `install.ps1`.
+- `--yes`, `--dry-run`, `--allow-root`, `--with-python`,
+  `--no-color`, `--list` CLI flags.
+- Rate-limiting + DDoS protection (exponential backoff with jitter,
+  Retry-After respect, wall-clock deadline).
+- Access control: HTTPS-only, `allowed_origins` allowlist, refuse-root,
+  `0700` temp dirs, `0600` logs, `O_CREAT|O_EXCL` against TOCTOU
+  symlink hijacks.
+- Cross-platform: macOS, Linux, Windows wherever Python ≥ 3.10 runs.
+- 43-case pytest suite.
+
+### Renamed (vs the previous `installer/` subproject)
+- Project: `installer` → `get-installer`.
+- Python module: `installer.core` → `get_installer`.
+- CLI: `simtabi-installer` → `get-installer`.
+- Schema: `install.schema.json` → `registry.schema.json`.
+
+### Pending (see [`SPEC.md`](SPEC.md))
+- Remote API registry source (DB-backed; JSON as fallback).
+- Multi-forge metadata in the registry (GitHub / GitLab / Bitbucket /
+  Gitea / generic git).
+- Domain-locked / enterprise / government tenancy.
+- Signed releases (sigstore or GPG).
+- Bundle script for vendoring as a single file.
+- Web UI / admin panel.
+- Mirror support.

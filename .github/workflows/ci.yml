@@ -1,0 +1,114 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    name: pytest + ruff + mypy
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest          # amd64
+          - ubuntu-24.04-arm       # arm64 — GitHub-hosted Linux/ARM runner
+          - macos-latest           # arm64 (Apple Silicon)
+          - macos-13               # amd64 (Intel) — keep until 13 retires
+          - windows-latest
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
+        exclude:
+          # macos-13 only needs one Python — it's the Intel-coverage row,
+          # not a full matrix
+          - os: macos-13
+            python-version: "3.10"
+          - os: macos-13
+            python-version: "3.11"
+          - os: macos-13
+            python-version: "3.13"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+      - name: Lint
+        run: ruff check src tests scripts
+      - name: Type-check
+        run: mypy src/get_installer scripts
+      - name: Test
+        run: pytest -q
+
+  bundle:
+    name: build single-file installer.py + verify reproducibility
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Build bundle
+        run: python scripts/bundle.py --check
+      - name: Build bundle again into a second path
+        run: python scripts/bundle.py --output dist2/installer.py
+      - name: Verify byte-reproducibility
+        run: |
+          if ! cmp -s dist/installer.py dist2/installer.py; then
+            echo "::error::Bundle is NOT byte-reproducible — timestamp leaked into body?"
+            diff <(head -50 dist/installer.py) <(head -50 dist2/installer.py) || true
+            exit 1
+          fi
+          echo "Bundle is reproducible. SHA: $(shasum -a 256 dist/installer.py | awk '{print $1}')"
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: installer
+          path: |
+            dist/installer.py
+            dist/installer.py.sha256
+            dist/installer.py.buildinfo.json
+
+  shellcheck:
+    name: shellcheck bootstrap scripts
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install shellcheck
+        run: sudo apt-get update && sudo apt-get install -y shellcheck
+      - name: Run shellcheck
+        run: |
+          shellcheck bootstrap/install.sh
+          shellcheck scripts/build-multiarch.sh
+          shellcheck deploy/build-aliases.sh
+
+  docker-multiarch:
+    name: Docker build (linux/amd64 + linux/arm64)
+    runs-on: ubuntu-latest
+    needs: bundle
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up QEMU (for cross-arch builds)
+        uses: docker/setup-qemu-action@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Build bundle (needed by Dockerfile)
+        run: python scripts/bundle.py
+      - name: Build for amd64 + arm64
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: false
+          tags: simtabi/get-installer:ci

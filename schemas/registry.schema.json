@@ -1,0 +1,215 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://get.simtabi.com/registry.schema.json",
+  "title": "Simtabi installer registry",
+  "description": "Registry of products and per-product versions installable by the Simtabi installer (src/get_installer/installer.py). The bootstrap fetches one of these and the user picks --product + --version.",
+  "type": "object",
+  "required": ["schema_version", "registry_updated", "products"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "const": 2,
+      "description": "Registry schema version. Installers refuse versions they don't know."
+    },
+    "registry_updated": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+      "description": "ISO date this registry was last edited. Surfaced in CLI output for provenance."
+    },
+    "min_installer_version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$",
+      "description": "Minimum installer.py version needed to consume this registry. Installer refuses older.",
+      "default": "1.0.0"
+    },
+    "signing": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Optional provenance metadata. Not currently enforced — reserved for future signature support.",
+      "properties": {
+        "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "signed_by": { "type": "string" },
+        "signature_url": { "type": "string", "format": "uri" }
+      }
+    },
+    "products": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": { "$ref": "#/$defs/product" }
+    },
+    "rate_limits": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Bounds on installer network behaviour (protects upstream + user).",
+      "properties": {
+        "max_retries": { "type": "integer", "minimum": 0, "maximum": 10, "default": 3 },
+        "retry_backoff_seconds": {
+          "type": "array",
+          "items": { "type": "number", "minimum": 0 },
+          "default": [1, 2, 5]
+        },
+        "max_total_seconds": { "type": "number", "minimum": 1, "default": 300 },
+        "max_bytes_per_download": { "type": "integer", "minimum": 1, "default": 10485760 },
+        "max_concurrent_downloads": { "type": "integer", "minimum": 1, "maximum": 4, "default": 1 },
+        "request_timeout_seconds": { "type": "number", "minimum": 1, "default": 30 }
+      }
+    },
+    "access_control": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Origin allowlist + filesystem permissions the installer enforces on its own artefacts.",
+      "properties": {
+        "allowed_origins": {
+          "type": "array",
+          "items": { "type": "string", "pattern": "^https://" },
+          "default": []
+        },
+        "log_mode": { "type": "integer", "minimum": 0, "maximum": 511, "default": 384 },
+        "tmp_mode": { "type": "integer", "minimum": 0, "maximum": 511, "default": 384 },
+        "refuse_symlink_targets_outside": { "type": "boolean", "default": true }
+      }
+    }
+  },
+  "$defs": {
+    "product": {
+      "type": "object",
+      "required": ["name", "summary", "default_version", "versions"],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]{1,63}$"
+        },
+        "summary": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "homepage": { "type": "string", "format": "uri" },
+        "default_version": {
+          "type": "string",
+          "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+([+-].+)?$"
+        },
+        "supported_platforms": {
+          "type": "array",
+          "description": "Coarse OS family. For finer-grained ecosystem support see `supported_ecosystems`.",
+          "items": { "enum": ["linux", "darwin", "windows"] },
+          "default": ["linux", "darwin", "windows"]
+        },
+        "supported_ecosystems": {
+          "type": "array",
+          "description": "Fine-grained ecosystem labels. Falls back to supported_platforms when empty.",
+          "items": {
+            "enum": [
+              "macos", "linux-glibc", "linux-musl", "windows", "wsl",
+              "git-bash", "cygwin", "chromeos", "termux", "ios-shell",
+              "freebsd", "openbsd", "netbsd", "solaris",
+              "cloud-shell-gcp", "cloud-shell-aws", "cloud-shell-azure",
+              "ci-github", "ci-gitlab", "ci-circle", "ci-other",
+              "docker", "kubernetes-init"
+            ]
+          },
+          "default": []
+        },
+        "versions": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": { "$ref": "#/$defs/version" }
+        }
+      }
+    },
+    "version": {
+      "type": "object",
+      "required": ["status", "package", "min_python", "install_method"],
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "enum": ["current", "deprecated", "unsupported", "yanked"],
+          "description": "current=install freely; deprecated=warn; unsupported=refuse without --allow-unsupported; yanked=refuse always"
+        },
+        "status_reason": {
+          "type": "string",
+          "description": "Human-readable explanation, shown when status != 'current'."
+        },
+        "released": {
+          "type": "string",
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+        },
+        "package": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9._-]{1,128}$"
+        },
+        "package_version": {
+          "type": "string",
+          "description": "Optional PyPI version pin. Defaults to the version key itself."
+        },
+        "min_python": {
+          "type": "string",
+          "pattern": "^[0-9]+\\.[0-9]+$"
+        },
+        "install_method": {
+          "enum": ["auto", "pipx", "uv-tool", "pip-user"]
+        },
+        "required_commands": {
+          "type": "array",
+          "items": { "type": "string", "pattern": "^[a-zA-Z0-9._-]{1,64}$" },
+          "default": []
+        },
+        "optional_commands": {
+          "type": "array",
+          "items": { "type": "string", "pattern": "^[a-zA-Z0-9._-]{1,64}$" },
+          "default": []
+        },
+        "post_install": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": { "type": "string" },
+            "minItems": 1
+          },
+          "default": []
+        },
+        "content_repo": {
+          "oneOf": [
+            { "type": "null" },
+            {
+              "type": "object",
+              "required": ["url", "target"],
+              "additionalProperties": false,
+              "properties": {
+                "url": { "type": "string", "pattern": "^(https://|git@)" },
+                "target": { "type": "string" },
+                "ref": { "type": "string", "default": "main" },
+                "optional": { "type": "boolean", "default": true }
+              }
+            }
+          ]
+        },
+        "prompts": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["key", "type", "question"],
+            "additionalProperties": false,
+            "properties": {
+              "key": { "type": "string", "pattern": "^[a-z][a-z0-9_]{0,63}$" },
+              "type": { "enum": ["yes_no", "string", "choice"] },
+              "question": { "type": "string", "minLength": 1, "maxLength": 200 },
+              "default": {},
+              "choices": { "type": "array", "items": { "type": "string" } },
+              "secret": { "type": "boolean", "default": false }
+            }
+          },
+          "default": []
+        },
+        "next_steps": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": []
+        },
+        "package_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$",
+          "description": "Optional: SHA256 of the package wheel for tamper detection (not yet enforced)."
+        }
+      }
+    }
+  }
+}

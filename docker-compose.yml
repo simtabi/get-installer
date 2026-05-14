@@ -1,0 +1,74 @@
+# Dev compose stack for the get-installer distribution channel.
+#
+#  Usage:
+#    cp .env.example .env
+#    edit .env (set passwords, optionally a CLOUDFLARE_TUNNEL_TOKEN)
+#    python scripts/bundle.py            # build dist/installer.py
+#    docker compose up --build
+#
+# This file is dev-only. For prod, add docker-compose.prod.yml as an
+# overlay: `docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d`.
+
+services:
+
+  # ----- Static distribution channel (read-only CDN content) ---------------
+  get:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        UBUNTU_TAG: ${UBUNTU_TAG:-26.04}
+    image: simtabi/get-installer:dev
+    container_name: get-installer
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    environment:
+      GET_INSTALLER_BASE_URL: ${GET_INSTALLER_BASE_URL:-http://localhost:8080}
+    networks:
+      - getnet
+
+  # ----- Postgres for the API (Phase M sibling repo) -----------------------
+  postgres:
+    image: postgres:17-alpine
+    container_name: get-installer-pg
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${PG_USER:-get_installer}
+      POSTGRES_PASSWORD: ${PG_PASSWORD:?set PG_PASSWORD in .env}
+      POSTGRES_DB: ${PG_DB:-get_installer}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${PG_USER:-get_installer}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - getnet
+
+  # ----- Cloudflare Tunnel sidecar (optional) ------------------------------
+  # Boots only when CLOUDFLARE_TUNNEL_TOKEN is set. Exposes the `get`
+  # service over an HTTPS zero-trust tunnel — no inbound ports.
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: get-installer-tunnel
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run --token ${CLOUDFLARE_TUNNEL_TOKEN}
+    profiles: [tunnel]
+    depends_on:
+      - get
+    networks:
+      - getnet
+
+volumes:
+  pgdata:
+
+networks:
+  getnet:
+    driver: bridge

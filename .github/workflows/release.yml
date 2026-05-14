@@ -1,0 +1,48 @@
+name: release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+jobs:
+  publish:
+    name: build + publish wheel + bundle
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/get-installer
+    permissions:
+      id-token: write    # OIDC for PyPI trusted publishing
+      contents: write    # upload-release-asset
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Build wheel + sdist
+        run: |
+          python -m pip install --upgrade pip build
+          python -m build
+
+      - name: Build single-file bundle
+        run: python scripts/bundle.py --check
+
+      - name: Compute checksums
+        run: |
+          shasum -a 256 dist/* > dist/SHA256SUMS
+
+      - name: Upload to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+
+      - name: Attach bundle + checksums to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/installer.py
+            dist/installer.py.sha256
+            dist/get_installer-*.whl
+            dist/get-installer-*.tar.gz
+            dist/SHA256SUMS

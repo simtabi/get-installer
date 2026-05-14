@@ -1,0 +1,79 @@
+{
+  "schema_version": 2,
+  "registry_updated": "2026-05-14",
+  "min_installer_version": "1.0.0",
+  "rate_limits": {
+    "max_retries": 3,
+    "retry_backoff_seconds": [1, 2, 5],
+    "max_total_seconds": 300,
+    "max_bytes_per_download": 10485760,
+    "max_concurrent_downloads": 1,
+    "request_timeout_seconds": 30
+  },
+  "access_control": {
+    "allowed_origins": [
+      "https://opensource.simtabi.com/",
+      "https://github.com/simtabi/",
+      "https://files.pythonhosted.org/",
+      "https://pypi.org/"
+    ],
+    "log_mode": 384,
+    "tmp_mode": 384,
+    "refuse_symlink_targets_outside": true
+  },
+  "products": {
+    "claude-configurator": {
+      "name": "claude-configurator",
+      "summary": "Version your ~/.claude/ via symlinks from a content dir.",
+      "homepage": "https://opensource.simtabi.com/products/claude-configurator",
+      "default_version": "0.2.0",
+      "supported_platforms": ["linux", "darwin", "windows"],
+      "versions": {
+        "0.2.0": {
+          "status": "current",
+          "released": "2026-05-14",
+          "package": "claude-configurator",
+          "min_python": "3.10",
+          "install_method": "auto",
+          "required_commands": ["git"],
+          "optional_commands": ["pipx", "uv"],
+          "post_install": [
+            {
+              "argv": ["claude-configurator", "--yes", "bootstrap", "--no-git"],
+              "if": "run_bootstrap=yes"
+            }
+          ],
+          "content_repo": null,
+          "prompts": [
+            {
+              "key": "run_bootstrap",
+              "type": "yes_no",
+              "default": true,
+              "question": "Run `claude-configurator bootstrap` to set up ~/.claude/ symlinks now?"
+            }
+          ],
+          "next_steps": [
+            "claude-configurator status            # what's tracked",
+            "claude-configurator list              # grouped content view",
+            "claude-configurator sync -m '...'     # commit changes",
+            "Docs: https://opensource.simtabi.com/documentation/claude-configurator"
+          ]
+        },
+        "0.1.0": {
+          "status": "deprecated",
+          "status_reason": "Superseded by 0.2.0. Lacks bootstrap, fetch, decisions, repair, and the expanded dir_symlink defaults.",
+          "released": "2026-05-11",
+          "package": "claude-configurator",
+          "package_version": "0.1.0",
+          "min_python": "3.10",
+          "install_method": "auto",
+          "required_commands": ["git"],
+          "post_install": [],
+          "next_steps": [
+            "Upgrade to 0.2.0 with `pipx upgrade claude-configurator`"
+          ]
+        }
+      }
+    }
+  }
+}
