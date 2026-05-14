@@ -181,6 +181,7 @@ and [`docs/security.md`](docs/security.md) for the full threat model.
 | [`docs/security.md`](docs/security.md) | Threat model + mitigations. |
 | [`docs/vendoring.md`](docs/vendoring.md) | How to drop this folder into another project. |
 | [`docs/distribution/homebrew.md`](docs/distribution/homebrew.md) | Homebrew tap as a complementary distribution channel. |
+| [`docs/distribution/docker.md`](docs/distribution/docker.md) | Docker image build + the PUID/PGID convention that fixes Linux volume-permission issues. |
 
 ## Run from source
 

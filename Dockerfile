@@ -41,17 +41,34 @@ ENV DEBIAN_FRONTEND=noninteractive \
     LC_ALL=C.UTF-8
 
 # Minimal package set: nginx (the web server) + supervisor (the process
-# manager) + python3.12 (for any local bundle rebuilds + healthchecks).
+# manager) + python3.12 (for local bundle rebuilds + healthchecks) +
+# gosu (drops privileges in the entrypoint without forking).
 RUN apt-get update \
  && apt-get install -y --no-install-recommends \
         ca-certificates \
+        curl \
+        gosu \
         nginx \
         python3.12 \
         python3-pip \
         supervisor \
-        curl \
         tini \
  && rm -rf /var/lib/apt/lists/*
+
+# PUID/PGID: build-time defaults. The entrypoint script honours runtime
+# PUID/PGID env vars and re-numbers the in-container `installer` user
+# to match the host. This is the LinuxServer.io convention; users on
+# Linux who mount host directories should pass:
+#
+#   docker run -e PUID=$(id -u) -e PGID=$(id -g) ...
+#
+# to avoid the classic "files written by container are root-owned on
+# host" failure mode.
+ARG PUID=1000
+ARG PGID=1000
+
+RUN groupadd -g "$PGID" installer \
+ && useradd -m -u "$PUID" -g "$PGID" -s /bin/bash installer
 
 WORKDIR /app
 
@@ -72,15 +89,33 @@ RUN chmod +x /usr/local/bin/build-aliases.sh && /usr/local/bin/build-aliases.sh
 COPY deploy/nginx.conf /etc/nginx/nginx.conf
 COPY deploy/supervisor-static.conf /etc/supervisor/conf.d/get-installer.conf
 
-# Drop privileges: nginx + supervisor run as the `www-data` user that
-# Ubuntu ships pre-created.
-USER root
+# Files served by nginx must be world-readable. The Ubuntu base ships
+# a `www-data` user pre-created; nginx itself runs as www-data per its
+# own user directive. The container's tini/supervisor processes run as
+# root (needed to bind port 80 + fork nginx + writeable PID files).
 RUN chown -R www-data:www-data /srv/www \
  && chmod -R a+rX /srv/www
+
+# Entrypoint applies PUID/PGID at runtime (LinuxServer.io convention).
+# When users mount a host volume into a writable path inside the
+# container, they should pass -e PUID=$(id -u) -e PGID=$(id -g) so the
+# container's writes land at the correct host ownership.
+#
+# This container is read-only by default (static content), so the
+# entrypoint is essentially a no-op for the default CMD. Users with
+# writable mounts benefit from setting CHOWN_PATHS to fix ownership
+# of those mounts at start time.
+COPY docker/entrypoint.sh /usr/local/bin/entrypoint
+RUN chmod +x /usr/local/bin/entrypoint
 
 EXPOSE 80
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s \
   CMD curl -fsS http://127.0.0.1/install.sh > /dev/null || exit 1
 
+# tini -> supervisord; entrypoint is a passthrough that runs as root
+# (no privilege drop here; nginx drops to www-data via its own config).
+# Users who want to run the container fully non-root can override:
+#   docker run --user $(id -u):$(id -g) --entrypoint /usr/local/bin/entrypoint \
+#       simtabi/get-installer:dev <cmd>
 ENTRYPOINT ["tini", "--", "/usr/bin/supervisord", "-c", "/etc/supervisor/supervisord.conf"]

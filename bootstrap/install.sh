@@ -68,6 +68,16 @@ if [ -z "${SHELL_OK:-}" ]; then
   esac
 fi
 
+# Docker context detection: if running inside a Docker container on
+# Linux, surface a one-line note about volume-permission expectations.
+# Files written under root inside the container appear as root-owned
+# on the host filesystem and confuse non-root host users. See
+# docs/distribution/docker.md for the PUID/PGID convention.
+if [ -f /proc/1/cgroup ] && grep -qE '(docker|kubepods|containerd)' /proc/1/cgroup 2>/dev/null; then
+  info "running inside a container; if a host volume is mounted into" \
+       "this install path, ensure PUID/PGID match your host user."
+fi
+
 # ----- find Python --------------------------------------------------------- #
 find_python() {
   for cand in python3.13 python3.12 python3.11 python3.10 python3 python; do

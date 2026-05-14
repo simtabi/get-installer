@@ -6,6 +6,47 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Added: Docker PUID/PGID handling + entrypoint privilege drop
+
+Linux Docker has a classic UID/GID failure mode: container UID 0
+writes files that appear root-owned on the host filesystem (vs.
+macOS/Windows where the Docker VM translates ownership). Fixed by
+adopting the LinuxServer.io PUID/PGID convention.
+
+- `Dockerfile`: new `ARG PUID=1000` and `ARG PGID=1000` build args.
+  Creates an `installer:installer` user at those numeric IDs. Adds
+  `gosu` for non-forking privilege drops.
+- `docker/entrypoint.sh` (new): reads runtime `PUID` / `PGID` env
+  vars, re-numbers the `installer` user via `usermod` /
+  `groupmod`, optionally chowns paths listed in `CHOWN_PATHS`,
+  then exec's via `gosu installer`. Refuses `PUID=0`/`PGID=0` (use
+  `docker run --user 0:0 --entrypoint <cmd>` to opt into root).
+- `docker-compose.yml`: passes `PUID`/`PGID` as both build args
+  AND runtime env vars (per LinuxServer.io). `CHOWN_PATHS` env var
+  also surfaced.
+- `bootstrap/install.sh`: when running inside a container (detected
+  via `/proc/1/cgroup` containing `docker|kubepods|containerd`),
+  emits a one-line note about volume-permission expectations.
+- `docs/distribution/docker.md` (new): full docs covering the
+  macOS-vs-Linux distinction, build args, runtime env vars,
+  privilege-drop pattern, diagnostic order-of-checks, common
+  pitfalls (forgetting --build, CHOWN_PATHS following symlinks,
+  WSL2 quirks).
+
+The default `CMD` still runs supervisord as root (needed to bind
+port 80 and fork nginx as www-data). The entrypoint is a no-op for
+that path. Users wanting fully-non-root containers can override
+ENTRYPOINT explicitly per the docs.
+
+### Added: render-env.sh post-write mode verification
+
+`chmod 600` on the output file can silently no-op on filesystems
+that don't honour POSIX mode bits (FAT, exFAT, some SMB mounts,
+certain Docker bind-mounts). After write, the script reads back
+the actual mode via `stat -c` (GNU) or `stat -f` (BSD) and emits
+a loud `WARNING` to stderr if the file ended up world-readable.
+Belt-and-suspenders for secret protection.
+
 ## [0.2.0] - 2026-05-14
 
 ### Added: Phase E foundation (signed + auth + rate-limited install URLs)

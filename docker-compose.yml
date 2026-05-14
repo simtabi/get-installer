@@ -18,6 +18,12 @@ services:
       dockerfile: Dockerfile
       args:
         UBUNTU_TAG: ${UBUNTU_TAG:-26.04}
+        # Linux host UID/GID baked at build time. Defaults to 1000/1000.
+        # For dev work that mounts host volumes, run `./scripts/dev-up.sh`
+        # (or set PUID/PGID in .env) so files written by the container
+        # land owned by your host user.
+        PUID: ${PUID:-1000}
+        PGID: ${PGID:-1000}
     image: simtabi/get-installer:dev
     container_name: get-installer
     restart: unless-stopped
@@ -30,6 +36,15 @@ services:
       retries: 3
     environment:
       GET_INSTALLER_BASE_URL: ${GET_INSTALLER_BASE_URL:-http://localhost:8080}
+      # The entrypoint script honours these at runtime. Setting PUID
+      # and PGID via the build args (above) bakes them as defaults;
+      # these env vars override at start time without rebuilding.
+      PUID: ${PUID:-1000}
+      PGID: ${PGID:-1000}
+      # Colon-separated paths the entrypoint will chown to PUID:PGID
+      # before nginx starts. Leave empty for read-only static serving;
+      # set when mounting writable host volumes.
+      CHOWN_PATHS: ${CHOWN_PATHS:-}
     networks:
       - getnet
 
