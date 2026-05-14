@@ -40,6 +40,18 @@ if [ ! -t 1 ]; then
   fail() { printf '[fail] %s\n' "$*" >&2; exit 1; }
 fi
 
+# ----- bootstrap-uv ------------------------------------------------------- #
+# When neither Python 3.10+ nor uv are on PATH, the user has nothing to fall
+# back on. --bootstrap-uv opts into curl-piping Astral's uv installer, which
+# brings a managed Python with it. Mirrors the same trust model as the rest
+# of this script: the user opts in explicitly; we never auto-install.
+BOOTSTRAP_UV=0
+for arg in "$@"; do
+  case "$arg" in
+    --bootstrap-uv) BOOTSTRAP_UV=1 ;;
+  esac
+done
+
 # ----- safety -------------------------------------------------------------- #
 if [ "$(id -u)" = "0" ]; then
   case " $* " in
@@ -75,13 +87,55 @@ find_python() {
 }
 
 if ! find_python; then
-  fail "Python ${MIN_PYTHON_MAJOR}.${MIN_PYTHON_MINOR}+ not found on PATH.
-       Install Python first (https://www.python.org/downloads/) or via your
-       package manager, then re-run this installer.
-       (If you have uv installed, you can also pass --with-python so the
-       Python-side installer bootstraps a userspace Python.)"
+  if [ "$BOOTSTRAP_UV" = "1" ]; then
+    info "Python ${MIN_PYTHON_MAJOR}.${MIN_PYTHON_MINOR}+ not found; bootstrapping uv from astral.sh"
+    info "(uv ships its own Python; --bootstrap-uv was passed)"
+    if command -v curl >/dev/null 2>&1; then
+      curl -fsSL --proto '=https' --tlsv1.2 --max-time 30 \
+        https://astral.sh/uv/install.sh | sh || fail "uv bootstrap failed"
+    else
+      fail "curl required to bootstrap uv"
+    fi
+    # uv installs into ~/.local/bin or ~/.cargo/bin depending on platform
+    for d in "$HOME/.local/bin" "$HOME/.cargo/bin"; do
+      if [ -x "$d/uv" ]; then
+        PATH="$d:$PATH"
+        export PATH
+        break
+      fi
+    done
+    if ! command -v uv >/dev/null 2>&1; then
+      fail "uv bootstrap finished but uv is still not on PATH"
+    fi
+    info "uv bootstrapped; installing managed Python ${MIN_PYTHON_MAJOR}.${MIN_PYTHON_MINOR}"
+    uv python install "${MIN_PYTHON_MAJOR}.${MIN_PYTHON_MINOR}" >/dev/null \
+      || fail "uv python install ${MIN_PYTHON_MAJOR}.${MIN_PYTHON_MINOR} failed"
+    if ! find_python; then
+      uv_py="$(uv python find "${MIN_PYTHON_MAJOR}.${MIN_PYTHON_MINOR}" 2>/dev/null || true)"
+      if [ -n "$uv_py" ] && [ -x "$uv_py" ]; then
+        PYTHON_BIN="$uv_py"
+        PYTHON_VERSION="${MIN_PYTHON_MAJOR}.${MIN_PYTHON_MINOR}"
+      else
+        fail "managed Python installed but not findable on PATH"
+      fi
+    fi
+  else
+    cat >&2 <<EOF
+[fail] Python ${MIN_PYTHON_MAJOR}.${MIN_PYTHON_MINOR}+ not found on PATH.
+
+This installer needs Python ${MIN_PYTHON_MAJOR}.${MIN_PYTHON_MINOR}+ to run. Choose one of:
+
+  uv     (recommended, fast)  https://docs.astral.sh/uv/getting-started/installation/
+  pipx                        https://pipx.pypa.io/stable/installation/
+  Python ${MIN_PYTHON_MAJOR}.${MIN_PYTHON_MINOR}+                https://www.python.org/downloads/
+
+Or rerun with --bootstrap-uv to install uv automatically (opt-in;
+fetches Astral's installer over HTTPS).
+EOF
+    exit 1
+  fi
 fi
-info "Python ${PYTHON_VERSION} at $(command -v "$PYTHON_BIN")"
+info "Python ${PYTHON_VERSION} at $(command -v "$PYTHON_BIN" 2>/dev/null || echo "$PYTHON_BIN")"
 
 # ----- find a downloader --------------------------------------------------- #
 # By default, curl restricts to HTTPS + TLS 1.2+. The

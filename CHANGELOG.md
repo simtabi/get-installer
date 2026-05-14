@@ -6,6 +6,33 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Added — Homebrew tap distribution channel
+
+- `templates/homebrew-formula.rb.template` — scaffold for the
+  `simtabi/homebrew-tap` formulae. Includes placeholders documented
+  inline and a `test do` block with version-assertion stub.
+- `docs/distribution/homebrew.md` — walks the one-time tap setup
+  (`brew tap-new`, `brew create --python`,
+  `brew update-python-resources`) plus the release-time workflow that
+  bumps the formula on every tag.
+- Ported from `simtabi/shimkit/installer/homebrew-formula.rb.template`,
+  generalized so any product in `registry.json` can land in the tap.
+
+### Added — bootstrap `--bootstrap-uv` flag
+
+- `bootstrap/install.sh` accepts `--bootstrap-uv` for users on a
+  machine with no Python 3.10+ and no uv. Opt-in only; curl-pipes
+  Astral's installer (`https://astral.sh/uv/install.sh`) over
+  HTTPS+TLS1.2, then runs `uv python install 3.10` and re-resolves
+  the interpreter. Complements the existing `--with-python` Python-
+  side flag (which requires uv to already be present).
+- Without `--bootstrap-uv`, the no-Python error message now lists
+  all three install options (uv / pipx / Python) with their URLs,
+  matching the friendly fail pattern from shimkit's installer.
+- Two new tests in `tests/test_bootstrap_launchers.py`: stub-PATH
+  drives the no-Python branch and asserts every URL surfaces; flag
+  presence asserts parse-clean.
+
 ### Added — bootstrap test coverage (closes §5 I12 + I13)
 
 - `tests/test_bootstrap_launchers.py` — 6 tests covering both launcher

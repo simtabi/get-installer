@@ -174,6 +174,7 @@ reproducible bundle output. See
 | [`docs/config-schema.md`](docs/config-schema.md) | Registry shape: products, versions, prompts, post-install, rate limits, access control. |
 | [`docs/security.md`](docs/security.md) | Threat model + mitigations. |
 | [`docs/vendoring.md`](docs/vendoring.md) | How to drop this folder into another project. |
+| [`docs/distribution/homebrew.md`](docs/distribution/homebrew.md) | Homebrew tap as a complementary distribution channel. |
 
 ## Run from source
 

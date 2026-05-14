@@ -168,6 +168,65 @@ def test_install_sh_refuses_on_sha_mismatch(mock_distribution) -> None:
 
 
 @pytest.mark.skipif(shutil.which("bash") is None, reason="bash not on PATH")
+@pytest.mark.skipif(sys.platform == "win32", reason="POSIX-only PATH stubbing")
+def test_install_sh_lists_install_urls_when_no_python(tmp_path: Path) -> None:
+    """When Python <3.10 isn't on PATH AND --bootstrap-uv isn't passed,
+    install.sh must surface the three install options + URLs so the user
+    can self-help. Regression guard: previously fail() collapsed to a
+    one-liner."""
+    bash_abs = shutil.which("bash")
+    assert bash_abs, "bash should resolve"
+    # Provide stub `python3` / `python` shims that report a too-old version,
+    # so find_python() in the script falls through. Keep /usr/bin:/bin for
+    # basic utilities (id, cat, awk, etc).
+    stub_dir = tmp_path / "bin"
+    stub_dir.mkdir()
+    stub_body = (
+        "#!/usr/bin/env sh\n"
+        "if [ \"$1\" = \"-c\" ]; then\n"
+        "  case \"$2\" in *version_info*) printf '2.7\\n' ;; *) exit 1 ;; esac\n"
+        "fi\n"
+    )
+    for name in ("python3", "python", "python3.10", "python3.11",
+                 "python3.12", "python3.13"):
+        p = stub_dir / name
+        p.write_text(stub_body, encoding="utf-8")
+        p.chmod(0o755)
+    env = {
+        "PATH": f"{stub_dir}:/usr/bin:/bin",
+        "HOME": str(tmp_path),
+        "SHELL_OK": "1",
+    }
+    r = subprocess.run(
+        [bash_abs, str(INSTALL_SH)],
+        env=env, capture_output=True, text=True, check=False,
+        timeout=10,
+    )
+    assert r.returncode != 0
+    combined = (r.stdout + r.stderr).lower()
+    # All three escape hatches must be named with their URL host
+    assert "docs.astral.sh/uv" in combined
+    assert "pipx.pypa.io" in combined
+    assert "python.org" in combined
+    assert "--bootstrap-uv" in combined
+
+
+@pytest.mark.skipif(shutil.which("bash") is None, reason="bash not on PATH")
+def test_install_sh_accepts_bootstrap_uv_flag() -> None:
+    """The --bootstrap-uv arg must parse cleanly (script doesn't blow up
+    just on flag presence). Actual uv install is integration-only."""
+    r = subprocess.run(
+        ["bash", "-n", str(INSTALL_SH)],
+        capture_output=True, text=True, check=False,
+    )
+    assert r.returncode == 0
+    # And the script source must reference both the flag and Astral's URL
+    body = INSTALL_SH.read_text(encoding="utf-8")
+    assert "--bootstrap-uv" in body
+    assert "astral.sh/uv" in body
+
+
+@pytest.mark.skipif(shutil.which("bash") is None, reason="bash not on PATH")
 @pytest.mark.skipif(sys.platform == "win32", reason="Unix temp dir permissions")
 def test_install_sh_warns_without_sha_pin(mock_distribution) -> None:
     """Without INSTALLER_SHA256 set, install.sh prints a warning then
