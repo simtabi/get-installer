@@ -1,4 +1,4 @@
-# `get-installer` — design specification + agent prompt
+# `get-installer`: design specification + agent prompt
 
 > This file is **both** the design specification AND the standing prompt
 > that future Claude Code sessions (and any other coding agent) load when
@@ -32,27 +32,27 @@ than it saves.
 
 ### During the work
 
-5. **Hallucination guard** — every claim about the codebase comes
+5. **Hallucination guard**: every claim about the codebase comes
    from a live `Read` / `Grep` / shell call in this session. Memory
    says what was true *when written*, not what's true *now*. Cite
    `path:line` everywhere you can. Phrases that signal you're
    guessing: "typically", "usually", "I believe", "around line ~",
    round numbers, paraphrases of code you haven't opened.
 
-6. **Track progress** — use `TaskCreate` / `TaskUpdate` for anything
+6. **Track progress**: use `TaskCreate` / `TaskUpdate` for anything
    beyond 3 steps. Mark `in_progress` *before* you start; `completed`
    *the moment* it's done, never batched.
 
-7. **Watch for regressions** — after every non-trivial edit, run the
+7. **Watch for regressions**: after every non-trivial edit, run the
    relevant subset of the audit checklist. Don't accumulate a
-   "I'll-run-tests-at-the-end" debt — failures discovered late cost
+   "I'll-run-tests-at-the-end" debt: failures discovered late cost
    double (the original work plus the retracing).
 
-8. **Log failures** — when a step fails (test red, lint complaint,
+8. **Log failures**: when a step fails (test red, lint complaint,
    wrong assumption), record it in your reply immediately: what failed,
    what you tried, what you'll try next. Don't silently retry.
 
-9. **Research before guessing** — when you need a fact you don't have
+9. **Research before guessing**: when you need a fact you don't have
    from this session's reads (an API signature, a CLI flag's
    semantics, a spec version), use `WebFetch` to read the official
    docs first, then trusted blogs second, only then ask the user.
@@ -65,7 +65,7 @@ than it saves.
    - **Skip**: random Medium articles, content farms, AI-generated blog
      spam, anything paywalled, GitHub gists without context
 
-10. **Clarifying questions** — when the user's ask is ambiguous *and*
+10. **Clarifying questions**: when the user's ask is ambiguous *and*
     the wrong interpretation would cost > 5 minutes to undo, **ask
     once before doing the work**. Acceptable phrasing: a numbered
     list of options, each with the trade-off. Not acceptable: a
@@ -73,7 +73,7 @@ than it saves.
 
 ### Session end
 
-11. **Self-improvement loop** — before signing off, scan your own
+11. **Self-improvement loop**: before signing off, scan your own
     work and suggest:
     - SPEC updates (new findings → §5 issues; finished phases → mark
       `[x]`).
@@ -81,7 +81,7 @@ than it saves.
       agent to follow that aren't here yet.
     - Test gaps you noticed but didn't close.
 
-12. **Hand-off summary** — last paragraph of the session covers:
+12. **Hand-off summary**: last paragraph of the session covers:
     what changed (cite paths), what's still open (cite issue ids),
     what the next agent should pick up first.
 
@@ -96,7 +96,7 @@ than it saves.
 
 ---
 
-## 🔍 Audit checklist — run this FIRST every session
+## 🔍 Audit checklist: run this FIRST every session
 
 Before writing or modifying code, every agent loading this file must
 run a status sweep and report findings inline. This is not optional;
@@ -105,26 +105,26 @@ compounds.
 
 The checklist:
 
-1. **`pytest tests -q`** — must be green. If not, fix before anything else.
-2. **`ruff check src tests scripts`** — must be clean. Same.
-3. **`mypy src/get_installer scripts`** — must be clean (strict).
-4. **`shellcheck bootstrap/install.sh deploy/build-aliases.sh`** — must be clean.
-5. **`scripts/bundle.py --check`** — bundle still builds.
-6. **CLI surface check** — run `python -m get_installer --help` and
+1. **`pytest tests -q`**: must be green. If not, fix before anything else.
+2. **`ruff check src tests scripts`**: must be clean. Same.
+3. **`mypy src/get_installer scripts`**: must be clean (strict).
+4. **`shellcheck bootstrap/install.sh deploy/build-aliases.sh`**: must be clean.
+5. **`scripts/bundle.py --check`**: bundle still builds.
+6. **CLI surface check**: run `python -m get_installer --help` and
    confirm the flags listed match `docs/config-schema.md`.
-7. **README authority check** — `find . -name "README.md" -not -path
-   "*/resources/*" -not -path "*/.venv/*" -not -path "*/.git/*"` — should
+7. **README authority check**: `find . -name "README.md" -not -path
+   "*/resources/*" -not -path "*/.venv/*" -not -path "*/.git/*"`: should
    return exactly **ONE** path (`./README.md`). Per-pack `details.md`
    under `resources/decisions/<pack>/` are fine; per-pack README.md
    files anywhere are not.
-8. **Roadmap drift** — for each `[x]` item in §4, spot-check the
+8. **Roadmap drift**: for each `[x]` item in §4, spot-check the
    referenced file/feature actually exists. For each `[ ]` item, spot-check
    it's actually not done.
-9. **Security baselines** — quickly grep for:
+9. **Security baselines**: quickly grep for:
    - `subprocess.run(.*shell=True` (zero matches expected)
    - `os.system\|eval\(` (zero matches expected)
    - URL fetches outside `verify.fetch_https` (zero matches expected)
-   - `mode=0o7..` / `chmod` calls in non-test code — verify each is
+   - `mode=0o7..` / `chmod` calls in non-test code: verify each is
      ≤ `0o644` for non-secret + `0o600` for journal logs / tmp files.
 
 Report findings as a 5-line summary at the top of your first response,
@@ -132,7 +132,7 @@ THEN proceed with the actual user request.
 
 ---
 
-## 0 — Project identity (locked)
+## 0: Project identity (locked)
 
 | Field | Value |
 |---|---|
@@ -160,7 +160,7 @@ to copy): **rustup** (`sh.rustup.rs`), **Homebrew**
 **uv** (`astral.sh/uv/install.sh`) for the bootstrap-with-Python
 pattern.
 
-## 1 — Mission
+## 1: Mission
 
 A reusable, secure, versatile bootstrap installer for distributing
 software packages across **public OSS**, **private enterprises**,
@@ -175,14 +175,14 @@ hundredth user are other Simtabi tools, third-party tools that vendor
 this installer, and customer enterprises with private product
 catalogues.
 
-## 2 — URL layout at `get.simtabi.com`
+## 2: URL layout at `get.simtabi.com`
 
 The canonical distribution channel. Static-file-CDN-friendly so it can
 be served behind CloudFront / Fastly / equivalents.
 
 ```
 https://get.simtabi.com/
-├── install.sh                         POSIX bootstrap (generic — needs --product flag)
+├── install.sh                         POSIX bootstrap (generic: needs --product flag)
 ├── install.ps1                        PowerShell bootstrap
 ├── installer.py                       Python core (the bundled single-file artefact)
 ├── installer.py.sha256                SHA256 of installer.py (text file, one line)
@@ -216,7 +216,7 @@ with the same path layout. The installer's `--registry` flag takes
 either a path or a URL, so mirrors are a deployment concern, not a
 code concern.
 
-## 3 — Current state (as of this commit)
+## 3: Current state (as of this commit)
 
 What is **done**:
 
@@ -237,14 +237,14 @@ What is **done**:
 
 Known issues / gaps logged in §5.
 
-## 4 — Required features (by phase)
+## 4: Required features (by phase)
 
 Each phase is **independently shippable**. An agent picking up this
 spec should declare which phase it is working on before writing code.
 Phases are roughly ordered by ROI; pick out of order only if the user
 explicitly asks.
 
-### Phase A — Hosting + URL contracts ✔ 2026-05-14
+### Phase A: Hosting + URL contracts ✔ 2026-05-14
 
 - [x] `bootstrap/install.sh` defaults to `https://get.simtabi.com`.
 - [x] `bootstrap/install.ps1` defaults to `https://get.simtabi.com`.
@@ -255,25 +255,25 @@ explicitly asks.
 - [x] CDN deployment recipes documented in `deploy/aws.md` +
       `deploy/vps.md` + `deploy/cloudflare-tunnel.md`.
 
-### Phase B — Bundle script (vendor-friendly single file) ✔ 2026-05-14
+### Phase B: Bundle script (vendor-friendly single file) ✔ 2026-05-14
 
-- [x] `scripts/bundle.py` — produces `dist/installer.py` from
+- [x] `scripts/bundle.py`: produces `dist/installer.py` from
       `src/get_installer/`.
 - [x] Bundle preserves the public CLI: `python installer.py --list`
       etc. behave identically to `python -m get_installer --list`.
 - [x] Bundle is single-file, ~59 KB (< 200 KB target).
-- [x] **Reproducible** — timestamps live in the sidecar
+- [x] **Reproducible**: timestamps live in the sidecar
       `installer.py.buildinfo.json`, not the bundle body. Running
       `bundle.py` twice yields byte-identical output. (Asserted in
       `tests/test_bundle.py:test_bundle_reproducible`.)
 - [x] CI builds and uploads `installer.py` + `installer.py.sha256` on
-      every tag — see `.github/workflows/release.yml`.
+      every tag: see `.github/workflows/release.yml`.
 - [x] Bundle test suite (`tests/test_bundle.py`, 7 cases) runs the
       bundled file end-to-end.
 
-### Phase C — Remote registry source (DB-backed) with JSON fallback ✔ 2026-05-14
+### Phase C: Remote registry source (DB-backed) with JSON fallback ✔ 2026-05-14
 
-- [x] `Registry.from_url(url, *, fallback_path, cache_dir, …)` —
+- [x] `Registry.from_url(url, *, fallback_path, cache_dir, …)`:
       loads from an HTTPS URL with optional auth header.
       (`src/get_installer/config.py:Registry.from_url`)
 - [x] On URL fetch failure, falls back to a local `fallback_path`
@@ -282,7 +282,7 @@ explicitly asks.
       `_looks_like_url`). `--auth-token` flag + `GET_INSTALLER_TOKEN`
       env var both supported. `--cache-dir` + `--refresh` flags.
 - [x] Origin-allowlisted via `access_control.allowed_origins` from a
-      local pre-load registry (closes §5 issue **I11** —
+      local pre-load registry (closes §5 issue **I11**:
       `verify.fetch_https` now has a real caller through `from_url`).
 - [x] Cache: validated responses are stashed at
       `$XDG_CACHE_HOME/get-installer/registry-<sha>.json` (mode
@@ -294,15 +294,15 @@ explicitly asks.
       path, auth header, header-injection refusal, cache write/use/
       stale/refresh, fallback, missing-fallback, malformed JSON,
       allowlist enforcement.
-- [ ] Server side (out of repo scope) — document the expected
+- [ ] Server side (out of repo scope): document the expected
       schema under `docs/api.md`. Lives in Phase M sibling repo.
 
-### Phase D — Forge-aware metadata (git packages)
+### Phase D: Forge-aware metadata (git packages)
 
 Some products are distributed as **git repos / tags**, not PyPI
 packages. Universities cataloguing research code, internal tooling,
 private GitHub Enterprise / Bitbucket Server / GitLab self-hosted /
-Gitea — these don't all push to PyPI. The registry should support:
+Gitea: these don't all push to PyPI. The registry should support:
 
 - [ ] New `source` field on a version entry with discriminated union:
       `{type: "pypi", name, version}`,
@@ -318,7 +318,7 @@ Gitea — these don't all push to PyPI. The registry should support:
       `source` is optional with PyPI as the default.
 - [ ] Tests cover each source type with a mock subprocess.
 
-### Phase E — Multi-tenant + domain-locked installs
+### Phase E: Multi-tenant + domain-locked installs
 
 For enterprise / government / university customers:
 
@@ -334,11 +334,11 @@ For enterprise / government / university customers:
       installer uses the top-level `products` (public) view.
 - [ ] All org-scoped installs emit an opt-in audit beacon (`api/v1/audit/install`)
       if the server supports it. The beacon is **anonymised** by default
-      (only product + version + result, no user data) — opt-in to richer
+      (only product + version + result, no user data): opt-in to richer
       telemetry via `audit_telemetry` in the registry.
 - [ ] Document the customer-mirror playbook in `docs/enterprise.md`.
 
-### Phase F — Signed releases
+### Phase F: Signed releases
 
 Today the bootstrap supports an optional SHA256 pin. Sign properly:
 
@@ -353,7 +353,7 @@ Today the bootstrap supports an optional SHA256 pin. Sign properly:
 - [ ] Document key rotation + the signing pipeline in
       `docs/signing.md`.
 
-### Phase G — Web UI / admin panel (separate deliverable)
+### Phase G: Web UI / admin panel (separate deliverable)
 
 Out of immediate scope but listed so a contributor knows where the line is:
 
@@ -365,7 +365,7 @@ Out of immediate scope but listed so a contributor knows where the line is:
 - [ ] The static `registry.json` is generated by the admin app and
       uploaded to the CDN nightly (and on demand).
 
-### Phase H — Hardening + audit
+### Phase H: Hardening + audit
 
 Round of polish + a public threat-model review:
 
@@ -387,12 +387,12 @@ Round of polish + a public threat-model review:
 - [ ] **Reproducible bundle**: bundling the same source twice produces
       byte-identical output. Document. CI gate.
 
-### Phase I — Forge package distribution (git-package catalogues)
+### Phase I: Forge package distribution (git-package catalogues)
 
 For universities / orgs that catalogue git-based projects (research
 code, internal tools), give them a way to declare their catalogue:
 
-- [ ] Registry mode `catalogue` — products entries don't install; they
+- [ ] Registry mode `catalogue`: products entries don't install; they
       list. `get-installer list` + `get-installer search`.
 - [ ] Each catalogue product can have `forge: { type: github|gitlab|...,
       url, default_branch, license, topics: [...] }`.
@@ -400,19 +400,19 @@ code, internal tools), give them a way to declare their catalogue:
       without installing anything. Useful for "show me the code".
 - [ ] Document this mode in `docs/catalogue.md`.
 
-### Phase J — CI/CD + release pipeline
+### Phase J: CI/CD + release pipeline
 
 Automated quality gates + artefact publishing. Lives in this repo's
 `.github/workflows/`.
 
-- [ ] `ci.yml` — runs on every push / PR:
+- [ ] `ci.yml`: runs on every push / PR:
       pytest + ruff + mypy + `scripts/bundle.py --check` on a matrix of
       `{ubuntu-latest, macos-latest, windows-latest} x {3.10, 3.11, 3.12, 3.13}`.
-- [ ] `release.yml` — runs on `v*.*.*` tags:
+- [ ] `release.yml`: runs on `v*.*.*` tags:
       builds the wheel + the single-file `installer.py` bundle +
       computes SHAs + uploads as GitHub Release assets + publishes the
       wheel to PyPI via OIDC trusted publishing.
-- [ ] `cdn-sync.yml` — on tag push, syncs the release assets
+- [ ] `cdn-sync.yml`: on tag push, syncs the release assets
       (`installer.py`, `installer.py.sha256`, `install.sh`,
       `install.ps1`, `registry.json`) to the `get.simtabi.com` object
       store. (Credential: scoped GitHub Actions secret; rotate
@@ -421,7 +421,7 @@ Automated quality gates + artefact publishing. Lives in this repo's
       `pip` + `github-actions`.
 - [ ] Branch-protection guidance documented in `docs/release.md`.
 
-### Phase K — Containerization + portable deployment (multi-arch)
+### Phase K: Containerization + portable deployment (multi-arch)
 
 **Hard requirement: every container image we publish is multi-arch.**
 
@@ -446,14 +446,14 @@ must publish wheels for both arches.
       ARGs for any cross-compilation work. Don't hardcode an arch in
       `FROM` lines.
 - [ ] Base images: prefer official multi-arch images (`ubuntu:26.04`,
-      `python:3.12-slim`, `node:22-alpine` — all multi-arch on Docker
+      `python:3.12-slim`, `node:22-alpine`: all multi-arch on Docker
       Hub). Pin by SHA digest in production (`@sha256:…`) so
       `ubuntu:26.04` updates don't silently bump the build.
 - [ ] Refuse arch-specific binary downloads inside the Dockerfile
       without arch detection: use `uname -m` / `$TARGETARCH` to pick
       the right artefact.
 - [ ] CI release pipeline pushes a **manifest list** to the registry
-      so `docker pull` Just Works on any host arch — no `--platform`
+      so `docker pull` Just Works on any host arch: no `--platform`
       needed by the consumer.
 - [ ] Smoke test on at least one ARM64 host before tag (GitHub-hosted
       `ubuntu-24.04-arm` runners, or a self-hosted Apple Silicon
@@ -463,7 +463,7 @@ must publish wheels for both arches.
 
 The end goal: a single Docker image that runs the **server side** (DB,
 API, web UI) of the distribution channel. The **client** (this
-installer) doesn't need a container — it runs on the user's machine.
+installer) doesn't need a container: it runs on the user's machine.
 But for the operator running `get.simtabi.com`, the server-side stack
 should be one `docker compose up` away.
 
@@ -482,60 +482,60 @@ Stack:
 
 Artefacts to add in this repo:
 
-- [ ] `Dockerfile` — Ubuntu 26.04 LTS base + Python 3.12 + supervisor.
+- [ ] `Dockerfile`: Ubuntu 26.04 LTS base + Python 3.12 + supervisor.
       Bundles the static `registry.json` + `installer.py` + `install.{sh,ps1}`
       and serves them via nginx at port 80 inside the container.
-      Suitable for the read-side of `get.simtabi.com` — pure CDN
+      Suitable for the read-side of `get.simtabi.com`: pure CDN
       semantics, no DB needed.
-- [ ] `Dockerfile.api` — adds Postgres client + Laravel admin
+- [ ] `Dockerfile.api`: adds Postgres client + Laravel admin
       (Phase M). Bigger, includes PHP-FPM + composer + node for
       the admin's Vite build. **Optional**: customers that don't
       need the dynamic API skip this entirely and just use the
       static Dockerfile.
-- [ ] `docker-compose.yml` — dev stack: postgres + the API container
+- [ ] `docker-compose.yml`: dev stack: postgres + the API container
       + the static container + a Cloudflare Tunnel sidecar. Reads
       `.env` for secrets.
-- [ ] `docker-compose.prod.yml` — production overlay: removes dev-only
+- [ ] `docker-compose.prod.yml`: production overlay: removes dev-only
       flags, enables health checks, sets resource limits, swaps to
       named volumes.
-- [ ] `.env.example` — every supported env var, commented, **with no
+- [ ] `.env.example`: every supported env var, commented, **with no
       real secrets**. Copy-pasted into `.env` (gitignored) per deploy.
-- [ ] `supervisor.conf` — defines processes: nginx, php-fpm,
+- [ ] `supervisor.conf`: defines processes: nginx, php-fpm,
       cloudflared, the api worker. Each with retry + auto-restart +
       structured-log redirection.
-- [ ] `deploy/cloudflare-tunnel.md` — recipe for `cloudflared tunnel
+- [ ] `deploy/cloudflare-tunnel.md`: recipe for `cloudflared tunnel
       create` + DNS routing.
-- [ ] `deploy/aws.md` — ECS / Fargate / S3 recipes.
-- [ ] `deploy/vps.md` — straight `apt install` + `docker compose`
+- [ ] `deploy/aws.md`: ECS / Fargate / S3 recipes.
+- [ ] `deploy/vps.md`: straight `apt install` + `docker compose`
       recipe for a single Ubuntu host (the "I have one $5 VPS" path).
-- [ ] `deploy/dev-test-domain.md` — mkcert + dnsmasq for local
+- [ ] `deploy/dev-test-domain.md`: mkcert + dnsmasq for local
       `*.test` development.
 
-### Phase L — Configuration via `.env`
+### Phase L: Configuration via `.env`
 
 For the server-side stack (Phase K) and any future deployable bits:
 
 - [ ] `.env.example` is the authoritative list of supported variables.
-- [ ] At runtime the server reads `.env` (12-factor) — never commits a
+- [ ] At runtime the server reads `.env` (12-factor): never commits a
       populated `.env` (gitignored).
 - [ ] `.env.example` is **also** the schema for a `validate-env.py`
       script that checks the deploying user's `.env` against it (refuses
       to start if required vars are missing).
-- [ ] Documented variables — minimum viable set:
-      - `GET_INSTALLER_DB_URL` — Postgres DSN (`postgres://user:pass@host:5432/get`)
-      - `GET_INSTALLER_BASE_URL` — public origin (e.g. `https://get.simtabi.com`)
-      - `GET_INSTALLER_ALLOWED_ORIGINS` — comma-separated allowlist
-      - `GET_INSTALLER_TOKEN_SECRET` — HMAC secret for org tokens
-      - `GET_INSTALLER_AUDIT_LOG_PATH` — where audit beacons land
-      - `CLOUDFLARE_TUNNEL_TOKEN` — for the cloudflared sidecar
-      - `PG_USER` / `PG_PASS` / `PG_DB` — Postgres dev creds
-      - `LARAVEL_APP_KEY` — set by `artisan key:generate`
-      - etc — see `.env.example` once it lands.
+- [ ] Documented variables: minimum viable set:
+      - `GET_INSTALLER_DB_URL`: Postgres DSN (`postgres://user:pass@host:5432/get`)
+      - `GET_INSTALLER_BASE_URL`: public origin (e.g. `https://get.simtabi.com`)
+      - `GET_INSTALLER_ALLOWED_ORIGINS`: comma-separated allowlist
+      - `GET_INSTALLER_TOKEN_SECRET`: HMAC secret for org tokens
+      - `GET_INSTALLER_AUDIT_LOG_PATH`: where audit beacons land
+      - `CLOUDFLARE_TUNNEL_TOKEN`: for the cloudflared sidecar
+      - `PG_USER` / `PG_PASS` / `PG_DB`: Postgres dev creds
+      - `LARAVEL_APP_KEY`: set by `artisan key:generate`
+      - etc: see `.env.example` once it lands.
 
-### Phase M — Sibling repo: `get-installer-admin` (Laravel 13 + Inertia + React + REST API + OAuth)
+### Phase M: Sibling repo: `get-installer-admin` (Laravel 13 + Inertia + React + REST API + OAuth)
 
-The web UI + REST API + DB management. **Does not live in this repo**
-— this repo stays stdlib-Python only. But the SPEC tracks it here so
+The web UI + REST API + DB management. **Does not live in this repo;
+this repo stays stdlib-Python only.** But the SPEC tracks it here so
 the system is described in one place.
 
 Stack:
@@ -545,7 +545,7 @@ Stack:
 | Server framework | **Laravel 13** (latest stable) |
 | Server language | **PHP 8.3+** |
 | Database | **PostgreSQL 17+** (Eloquent ORM) |
-| Frontend | **React 18+** via **Inertia.js** (server-driven SPA — Laravel routes, React components, no separate frontend repo) |
+| Frontend | **React 18+** via **Inertia.js** (server-driven SPA: Laravel routes, React components, no separate frontend repo) |
 | Component library | **shadcn/ui** + **Tailwind CSS 4** |
 | State / data fetching | **TanStack Query** for the REST surface; Inertia handles page-level data |
 | Build / bundler | **Vite 6** |
@@ -562,9 +562,9 @@ Stack:
   enterprise customers want their own white-labelled admin built on the
   same backend.
 - **Inertia + React** gives a real SPA UX without the cost of two
-  codebases — the admin and any white-labelled portals share routes,
+  codebases: the admin and any white-labelled portals share routes,
   controllers, and policies.
-- **REST stays first-class**, separate from the Inertia routes — the
+- **REST stays first-class**, separate from the Inertia routes: the
   installer + customer scripts / Terraform / SDKs all use REST; only
   the admin UI uses Inertia.
 
@@ -608,7 +608,7 @@ POST /webauthn/verify                           → step-up auth for sensitive o
   org, rotating a token-secret, exporting an audit log.
 - **Diff view** before any registry edit: show what the resulting
   `registry.json` will look like.
-- **Org switcher** in the navbar — for users that manage multiple
+- **Org switcher** in the navbar: for users that manage multiple
   tenants.
 - **Common-user mode**: a public read-only landing that lists all
   current products + their install one-liners. Same look-and-feel
@@ -622,7 +622,7 @@ Container image: built from `Dockerfile.api` in this repo (the API
 container image is generated here so the admin doesn't need to know
 about infrastructure).
 
-### Phase N — REST-API client in the installer
+### Phase N: REST-API client in the installer
 
 Once Phase M is live, this installer should also be able to **read its
 registry from the API** (Phase C already drafted; expand here):
@@ -635,10 +635,10 @@ registry from the API** (Phase C already drafted; expand here):
 - [ ] Falls back to a bundled `registry.json` when the API is
       unreachable (clearly warned).
 
-### Phase P — Military-grade security baseline
+### Phase P: Military-grade security baseline
 
 Goes beyond standard hygiene. The bar most enterprises don't reach.
-Each item is **independently shippable** — turn each on with a flag /
+Each item is **independently shippable**: turn each on with a flag /
 config knob so the common-user UX stays simple and the gov / defence /
 finance / healthcare customer flips them on.
 
@@ -670,7 +670,7 @@ finance / healthcare customer flips them on.
       OpenSSL (`hashlib._hashopenssl`) and prefer it; refuse
       non-FIPS hashes when `--fips-mode` is set.
 - [ ] **Air-gap install support**: a single tarball
-      (`get-installer-airgap-<version>.tar.gz`) contains everything —
+      (`get-installer-airgap-<version>.tar.gz`) contains everything:
       bundle, registry, signatures, the offline-build of any optional
       tooling. `get-installer install-offline <tarball>` runs without
       network access.
@@ -692,7 +692,7 @@ finance / healthcare customer flips them on.
 
 - [ ] **`docs/threat-model.md`**: STRIDE per component, mitigations
       cited per line. Updated when any phase ships.
-- [ ] **`docs/incident-response.md`**: pre-written runbook — "what to
+- [ ] **`docs/incident-response.md`**: pre-written runbook: "what to
       do when an `installer.py` SHA we published is reported tampered."
 - [ ] **`docs/compliance.md`**: maps our controls to SOC 2 / ISO 27001 /
       NIST SP 800-218 (SSDF) controls. Useful when a customer asks for
@@ -708,7 +708,7 @@ Mil-grade is configurable, NOT mandatory. Defaults stay friendly:
 - WebAuthn step-up needs `auth.require_webauthn_for: [...]` in the
   registry.
 
-### Phase Q — Expanded ecosystem support
+### Phase Q: Expanded ecosystem support
 
 The installer's stated target was macOS, Linux, Windows. Real-world
 developers run on more than three OSes. Each gets a per-platform
@@ -725,10 +725,10 @@ documented launcher path:
 | **Git-Bash / Cygwin** (Windows POSIX layers) | `install.sh` | test in CI |
 | **ChromeOS** | `install.sh` under Crostini's Debian container | document the `vmc start termina` precondition |
 | **Android / Termux** | `install.sh` with `pkg install python git` precondition | document tested combos; no PowerShell |
-| **iOS (a-Shell / iSH)** | `install.sh` minimal — only the catalogue mode (no real symlinks to `~/.claude/` since the FS sandbox forbids it) | document degraded mode |
+| **iOS (a-Shell / iSH)** | `install.sh` minimal: only the catalogue mode (no real symlinks to `~/.claude/` since the FS sandbox forbids it) | document degraded mode |
 | **FreeBSD / OpenBSD / NetBSD** | `install.sh` | test in CI nightlies |
 | **Solaris / illumos** | `install.sh` | best-effort, document caveats |
-| **Cloud shells** (Google Cloud Shell, AWS CloudShell, Azure Cloud Shell) | `install.sh` | ephemeral home dirs — note in docs that re-running on every login is the expected pattern |
+| **Cloud shells** (Google Cloud Shell, AWS CloudShell, Azure Cloud Shell) | `install.sh` | ephemeral home dirs: note in docs that re-running on every login is the expected pattern |
 | **CI environments** (GitHub Actions, GitLab CI, CircleCI, etc.) | `install.sh --yes --no-decisions --dry-run` recipes | give a copy-pasteable matrix per provider |
 | **Docker** (containers) | `install.sh` runs in the image build | document a "vendor the installer.py into the image at build time" pattern for air-gapped deploys |
 
@@ -744,15 +744,15 @@ Concretely:
       `chromeos.md`, `termux.md`, `ios.md`, `bsd.md`, `cloud-shells.md`,
       `ci.md`, `docker.md`.
 - [ ] iOS / catalogue-only mode: when `--mode=catalogue` is set, the
-      installer doesn't try to symlink or run pipx — it just prints the
+      installer doesn't try to symlink or run pipx: it just prints the
       registry. Useful where the filesystem is sandboxed.
 
-### Phase R — Public landing page + app-store catalogue
+### Phase R: Public landing page + app-store catalogue
 
 The web UI has two distinct surfaces, served by the same Laravel
 sibling repo (Phase M):
 
-#### R.1 — Public landing page (`https://get.simtabi.com/`)
+#### R.1: Public landing page (`https://get.simtabi.com/`)
 
 - [ ] Hero with the one-liner install command per OS, copy-button.
 - [ ] **App-store-style catalogue** of all currently published
@@ -778,7 +778,7 @@ sibling repo (Phase M):
 - [ ] **No login required** for the landing/catalogue. Sign-in is
       admin-only.
 
-#### R.2 — Admin dashboard (`https://get.simtabi.com/admin/`)
+#### R.2: Admin dashboard (`https://get.simtabi.com/admin/`)
 
 - [ ] OAuth login (GitHub / GitLab / Google / Azure AD via Socialite).
 - [ ] WebAuthn step-up for destructive actions.
@@ -788,20 +788,20 @@ sibling repo (Phase M):
       audit row.
 - [ ] **Org management** for multi-tenant deployments.
 - [ ] **Audit-log viewer** with filter + export to JSONL.
-- [ ] **Sigstore signing trigger** — manual or scheduled re-sign.
-- [ ] **SBOM viewer** — read-only graph of every published artefact's
+- [ ] **Sigstore signing trigger**: manual or scheduled re-sign.
+- [ ] **SBOM viewer**: read-only graph of every published artefact's
       dependencies (CycloneDX import).
-- [ ] **Installer beacon dashboard** — counts per product per platform
+- [ ] **Installer beacon dashboard**: counts per product per platform
       per day, opt-in only.
 
-#### R.3 — Public API parity
+#### R.3: Public API parity
 
 The same data the catalogue / dashboard renders is available under
 `/api/v1/...` so SDKs / Terraform / CI scripts can drive everything
 the human admin can. The admin UI uses the REST surface internally
-(via Inertia + TanStack Query) — no special endpoints.
+(via Inertia + TanStack Query): no special endpoints.
 
-### Phase O — Audit beacons (opt-in telemetry)
+### Phase O: Audit beacons (opt-in telemetry)
 
 For enterprise / government deployments that need install reporting:
 
@@ -816,7 +816,7 @@ For enterprise / government deployments that need install reporting:
       within the org but not across orgs.
 - [ ] The user can always pass `--no-audit` to refuse beaconing.
 
-## 5 — Open issues / known bugs to fix in passing
+## 5: Open issues / known bugs to fix in passing
 
 | # | Where | Issue |
 |---|---|---|
@@ -824,18 +824,18 @@ For enterprise / government deployments that need install reporting:
 | I2 | `src/get_installer/verify.py:fetch_https` | The `last_exc` rebind shadows the outer name; mypy doesn't catch it because we cast. Rewrite to use a typed Optional explicitly. |
 | I3 | `bootstrap/install.sh` | The `INSTALLER_SHA256` env-var path is documented but tests don't cover it. Add a fixture that fakes a mismatch and confirms the bootstrap exits non-zero. |
 | I4 | `src/get_installer/config.py:Registry.list_products` | Sorts versions desc by semver, but pre-release sort ordering hasn't been validated against the real semver-2.0 spec (build metadata not handled). Add a test with a `1.0.0-rc.1` vs `1.0.0` case. |
-| I5 | `src/get_installer/installer.py:_phase_post_install` | `subprocess.run(list(step.argv), check=False)` — if a command name has spaces, this fails opaquely. Add a `which` check before exec with a clear error. |
+| I5 | `src/get_installer/installer.py:_phase_post_install` | `subprocess.run(list(step.argv), check=False)`: if a command name has spaces, this fails opaquely. Add a `which` check before exec with a clear error. |
 | I6 | `tests/test_installer.py:test_root_refused_without_flag` | Uses `unittest.mock.patch("os.geteuid", create=True)`. On Windows there's no `geteuid`. Add a `pytest.mark.skipif(sys.platform == "win32")`. |
 | I7 | `bootstrap/install.ps1` | The trap clause uses `Write-Fail` but if the trap fires inside the `trap` block itself, the script exits with the wrong code. Switch to a `try/finally`. |
 | I8 | `src/get_installer/journal.py:JournalEntry` | Not frozen. A misbehaving caller could mutate `description` mid-run. Make it `frozen=True` once we don't need post-init field replacement. |
-| I9 | `registry.json` for `claude-configurator` 0.1.0 | `status: deprecated` but the `next_steps` field says "upgrade with pipx upgrade" — that only works if 0.1.0 was already installed via pipx. Generalise the message. |
+| I9 | `registry.json` for `claude-configurator` 0.1.0 | `status: deprecated` but the `next_steps` field says "upgrade with pipx upgrade": that only works if 0.1.0 was already installed via pipx. Generalise the message. |
 | I10 | All docs | The previous `installer/` path appears in some links / examples that the migration script may not have caught. Grep + sweep. |
 | ~~I11~~ | ~~`src/get_installer/installer.py`~~ | ~~Allowed-origins allowlist was dead code.~~ **Resolved 2026-05-14 by Phase C**: `Registry.from_url` is now the live caller of `verify.fetch_https`, and it threads `allowed_origins` through. |
 | ~~I12~~ | ~~`bootstrap/install.sh`~~ | ~~`INSTALLER_SHA256` had no test.~~ **Resolved 2026-05-14**: `tests/test_bootstrap_launchers.py` covers match-passes / mismatch-refuses / no-pin-warns paths. |
-| ~~I13~~ | ~~All bootstrap path-tests~~ | ~~No end-to-end coverage of `install.sh` / `install.ps1`.~~ **Resolved 2026-05-14**: 5 tests now run `bash -n` + `sh -n` syntax checks, `pwsh` parse check (skipped where unavailable), and an end-to-end flow against a local HTTP server (gated by `INSTALLER_PROTO_OVERRIDE` — test-only). |
+| ~~I13~~ | ~~All bootstrap path-tests~~ | ~~No end-to-end coverage of `install.sh` / `install.ps1`.~~ **Resolved 2026-05-14**: 5 tests now run `bash -n` + `sh -n` syntax checks, `pwsh` parse check (skipped where unavailable), and an end-to-end flow against a local HTTP server (gated by `INSTALLER_PROTO_OVERRIDE`: test-only). |
 | I14 | `bootstrap/install.sh` | The new `INSTALLER_PROTO_OVERRIDE` env var bypasses the HTTPS-only guard for test fixtures. It's loud-warned, but it's still an attack surface if a user sets it by accident. Consider tying the override to a build-time flag (e.g., `-e GET_INSTALLER_TEST_MODE=1`) so prod builds can refuse to honour it at all. |
 
-## 6 — Out of scope (explicitly NOT this project)
+## 6: Out of scope (explicitly NOT this project)
 
 - **A package manager.** This installs a single package from a known
   source; resolving complex dependency trees is `pip` / `apt` / `brew`'s
@@ -847,7 +847,7 @@ For enterprise / government deployments that need install reporting:
   we don't ship the server.
 - **Running as a long-lived daemon.** Single-shot, transactional, exits.
 
-## 7 — Coding conventions (Simtabi-org defaults apply)
+## 7: Coding conventions (Simtabi-org defaults apply)
 
 See `/Users/imanimanyara/Artisan/projects/opensource/CLAUDE.md` and
 `/Users/imanimanyara/.claude/CLAUDE.md` for the full set. Highlights
@@ -863,14 +863,14 @@ for agents working in this repo:
   user-facing prose.
 - Commit messages: imperative ≤ 72 chars, body explains *why*.
 
-## 8 — Agent-loop instructions
+## 8: Agent-loop instructions
 
 When a coding agent loads this file:
 
 1. **Run the audit checklist at the top FIRST.** Five-line summary
    of findings goes at the top of your first response.
 2. **Read every section before writing.**
-3. **State the phase you're entering** (e.g., "I'm working on Phase B —
+3. **State the phase you're entering** (e.g., "I'm working on Phase B,
    Bundle script") before any tool calls.
 4. **Verify before claiming**: every grep / file count / version
    string must come from a live read or a fresh shell command, not
@@ -888,7 +888,7 @@ When a coding agent loads this file:
    and germane to the file you touched. Don't expand scope past the
    diff you'd already be making.
 
-## 9 — Glossary
+## 9: Glossary
 
 | Term | Meaning |
 |---|---|
@@ -904,7 +904,7 @@ When a coding agent loads this file:
 
 ---
 
-## 12 — Known design / technical / architectural flaws
+## 12: Known design / technical / architectural flaws
 
 Catalogued from the 2026-05-14 systematic review. Ordered by ROI of
 fixing. Move items to §5 once they have an explicit owner.
@@ -916,7 +916,7 @@ fixing. Move items to §5 once they have an explicit owner.
 | A-1 | **`registry.json` does dual duty**: it's both the in-repo dev fallback AND the canonical content served at `get.simtabi.com`. Editing one means remembering to edit the other when they diverge. | Move the dev fallback to `registry/samples/dev-registry.json`. The top-level `registry.json` becomes the "what we publish" snapshot, updated only by the release pipeline. |
 | A-2 | **No shared contract between client + Phase M admin**. Either side could drift from the schema without the other noticing. | Add `schemas/registry.schema.json` to the get-installer-admin repo via git submodule or vendored copy on each release. Add a CI cross-check that the admin's API responses validate against this schema. |
 | A-3 | **No SDK** for the API. Anyone driving the admin programmatically writes raw curl. | After Phase M, generate a Python SDK + a TS SDK from the OpenAPI spec the Laravel admin emits via `dedoc/scramble`. Ship as `get-installer-sdk` (Python) and `@simtabi/get-installer` (npm). |
-| A-4 | **`Registry.products: dict[str, dict[str, Any]]`** — `Any` defeats the type system. Product entries are only parsed lazily by `resolve()`. | Parse all products eagerly into typed `Product` / `Version` dataclasses on `load`. Keep the raw dict only for round-trip JSON. |
+| A-4 | **`Registry.products: dict[str, dict[str, Any]]`**: `Any` defeats the type system. Product entries are only parsed lazily by `resolve()`. | Parse all products eagerly into typed `Product` / `Version` dataclasses on `load`. Keep the raw dict only for round-trip JSON. |
 | A-5 | **Static-CDN + dynamic-API are two stacks** but currently only the static one has a Dockerfile. The Phase M Laravel image will be a separate, larger container. | Ship `Dockerfile.api` here so the deployment story is "two images, both built from this repo's recipes". |
 | A-6 | **No client-side cache TTLs** for registry fetches. Every install hits the URL. | Cache the registry at `$XDG_CACHE_HOME/get-installer/registry-<sha>.json` with a 5-minute TTL by default. Refresh on `--refresh`. |
 | A-7 | **No standby / mirror story**. If get.simtabi.com goes down, every install fails. | Multi-origin spec: registry can declare `mirrors: ["https://get.example.org", "https://get2.simtabi.com"]`. Client tries each. |
@@ -927,8 +927,8 @@ fixing. Move items to §5 once they have an explicit owner.
 |---|---|---|
 | T-1 | **Bundle's stdlib import collection collects everything**, even imports a module only needs internally but exports through `__init__`. Some imports end up unused in the bundle. | Run a dead-import pass after concatenation: import the bundled file in a subprocess, parse its AST, drop top-level imports that aren't referenced. |
 | T-2 | **`--allow-deprecated default=True` + `--no-deprecated`** is a confusing dual flag. | Replace with a single tri-state `--deprecated {allow,warn,refuse}` defaulting to `warn`. Same for unsupported / yanked. |
-| T-3 | **`_default_registry_path` walks parents** as a last resort — fragile in unusual layouts (notebook-style `cwd`, `pip install --target` setups). | Drop the parent walk. Require either `--registry`, `$GET_INSTALLER_REGISTRY`, or `./registry.json`. Print the searched locations on failure. |
-| T-4 | **The bootstrap launchers download from one fixed URL**. No retry across mirrors, no integrity beyond optional SHA pin. | Add the `mirrors` array (paired with A-7) at the bootstrap layer too — `install.sh` tries each in order. |
+| T-3 | **`_default_registry_path` walks parents** as a last resort: fragile in unusual layouts (notebook-style `cwd`, `pip install --target` setups). | Drop the parent walk. Require either `--registry`, `$GET_INSTALLER_REGISTRY`, or `./registry.json`. Print the searched locations on failure. |
+| T-4 | **The bootstrap launchers download from one fixed URL**. No retry across mirrors, no integrity beyond optional SHA pin. | Add the `mirrors` array (paired with A-7) at the bootstrap layer too: `install.sh` tries each in order. |
 | T-5 | **No `--json` output mode** anywhere in the CLI. Hard to script around `--list`, `--dry-run` summaries. | Add `--json` to every read-only subcommand. The structured output IS the surface tools depend on. |
 | T-6 | **Tests cover Python but not the shell launchers**. `bash -n install.sh` syntax-checks but doesn't prove the flow. | Add an integration test that runs a local HTTP server, points `INSTALLER_BASE_URL` at it, and exercises the bash + PowerShell launchers end-to-end. |
 | T-7 | **`__main__.py:_default_registry_path` uses `os.environ.get` then `Path.cwd`**. On Windows, cwd can have unusual case-folding. | Normalise via `Path.resolve()` consistently. |
@@ -954,7 +954,7 @@ fixing. Move items to §5 once they have an explicit owner.
 | S-4 | **No tamper-evident logging on the client side**. Server-side has hash-chained audit (Phase P); client logs are flat. | Hash-chain the journal log too. |
 | S-5 | **`--allow-root` is a CLI flag**. An attacker who controls the CLI args can pass it. | Add a registry-side `forbid_root` flag that even `--allow-root` cannot override when set. |
 
-## 10 — Directory grouping (proposed)
+## 10: Directory grouping (proposed)
 
 Currently the top-level is flat:
 
@@ -980,7 +980,7 @@ get-installer/
 └── tests/
 ```
 
-Proposed regrouping (a v0.2 cleanup — DO NOT do this without an
+Proposed regrouping (a v0.2 cleanup: DO NOT do this without an
 explicit user OK; it breaks every URL/link/CI reference):
 
 ```
@@ -1033,7 +1033,7 @@ Recommendation: **defer to v0.2.0** unless we're already breaking
 URLs. If we go ahead, do it as one focused PR with a migration script
 in `scripts/migrate-v0.2.sh`.
 
-## 11 — System diagram (text form)
+## 11: System diagram (text form)
 
 ```
                      ┌────────────────────────────────┐
@@ -1046,7 +1046,7 @@ in `scripts/migrate-v0.2.sh`.
                     ┌─────▼─────┐   ┌──────▼────────────┐
                     │  Nginx    │   │  Laravel admin    │
                     │ (Phase K) │   │  (Phase M sibling │
-                    │ stdlib    │   │  repo) — Inertia  │
+                    │ stdlib    │   │  repo): Inertia  │
                     │ Python    │   │  + React + REST   │
                     │ bundle    │   └──────┬────────────┘
                     └─────┬─────┘          │
