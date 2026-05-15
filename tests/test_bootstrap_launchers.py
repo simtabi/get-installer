@@ -31,7 +31,10 @@ INSTALL_PS1 = REPO_ROOT / "bootstrap" / "install.ps1"
 # --- syntax-only parse checks --------------------------------------------
 
 
-@pytest.mark.skipif(shutil.which("bash") is None, reason="bash not on PATH")
+@pytest.mark.skipif(
+    shutil.which("bash") is None or sys.platform == "win32",
+    reason="bash not on PATH (Git-Bash on Windows can't parse Windows-style paths reliably)",
+)
 def test_install_sh_passes_bash_syntax_check() -> None:
     """``bash -n`` parses the script without executing it. Catches typos."""
     r = subprocess.run(
@@ -212,6 +215,10 @@ def test_install_sh_lists_install_urls_when_no_python(tmp_path: Path) -> None:
 
 
 @pytest.mark.skipif(shutil.which("bash") is None, reason="bash not on PATH")
+@pytest.mark.skipif(
+    shutil.which("bash") is None or sys.platform == "win32",
+    reason="bash not on PATH (Git-Bash on Windows can't parse Windows-style paths reliably)",
+)
 def test_install_sh_accepts_bootstrap_uv_flag() -> None:
     """The --bootstrap-uv arg must parse cleanly (script doesn't blow up
     just on flag presence). Actual uv install is integration-only."""

@@ -218,10 +218,15 @@ def main() -> int:
 
     text = bundle()
     args.output.parent.mkdir(parents=True, exist_ok=True)
-    args.output.write_text(text, encoding="utf-8")
+    # Write bytes (not text) so Windows doesn't translate LF -> CRLF and
+    # produce a file whose on-disk SHA differs from the recorded one.
+    payload = text.encode("utf-8")
+    args.output.write_bytes(payload)
 
-    sha = hashlib.sha256(text.encode("utf-8")).hexdigest()
-    (args.output.parent / (args.output.name + ".sha256")).write_text(sha + "\n", encoding="utf-8")
+    sha = hashlib.sha256(payload).hexdigest()
+    (args.output.parent / (args.output.name + ".sha256")).write_bytes(
+        (sha + "\n").encode("utf-8")
+    )
 
     # Build metadata in a sidecar: keeping it out of the bundle body
     # keeps the bundle byte-reproducible across builds.

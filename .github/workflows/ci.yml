@@ -10,6 +10,11 @@ jobs:
   test:
     name: pytest + ruff + mypy
     runs-on: ${{ matrix.os }}
+    env:
+      # Windows defaults stdout to cp1252 for subprocess captures; tests
+      # exercising the bundled installer's UTF-8 output need this on.
+      PYTHONIOENCODING: utf-8
+      PYTHONUTF8: "1"
     strategy:
       fail-fast: false
       matrix:
