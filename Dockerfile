@@ -41,15 +41,18 @@ ENV DEBIAN_FRONTEND=noninteractive \
     LC_ALL=C.UTF-8
 
 # Minimal package set: nginx (the web server) + supervisor (the process
-# manager) + python3.12 (for local bundle rebuilds + healthchecks) +
-# gosu (drops privileges in the entrypoint without forking).
+# manager) + python3 (for local bundle rebuilds + healthchecks; tracks
+# whatever the default Python is on the target Ubuntu release — the
+# bundled installer.py is python_requires >= 3.10 and works on any
+# python3 ≥ 3.10) + gosu (drops privileges in the entrypoint without
+# forking).
 RUN apt-get update \
  && apt-get install -y --no-install-recommends \
         ca-certificates \
         curl \
         gosu \
         nginx \
-        python3.12 \
+        python3 \
         python3-pip \
         supervisor \
         tini \
