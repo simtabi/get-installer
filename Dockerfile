@@ -70,7 +70,10 @@ RUN apt-get update \
 ARG PUID=1000
 ARG PGID=1000
 
-RUN groupadd -g "$PGID" installer \
+# Ubuntu 24.04+ pre-creates an `ubuntu` user at UID 1000. Remove it so
+# our `installer` user can claim 1000 (the LinuxServer.io convention).
+RUN if id -u ubuntu >/dev/null 2>&1; then userdel -r ubuntu 2>/dev/null || true; fi \
+ && groupadd -g "$PGID" installer \
  && useradd -m -u "$PUID" -g "$PGID" -s /bin/bash installer
 
 WORKDIR /app
