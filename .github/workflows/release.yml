@@ -16,9 +16,9 @@ jobs:
       id-token: write    # OIDC for PyPI trusted publishing
       contents: write    # upload-release-asset
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
 
@@ -32,7 +32,9 @@ jobs:
 
       - name: Compute checksums
         run: |
-          shasum -a 256 dist/* > dist/SHA256SUMS
+          # `python -m build` leaves dist/__pycache__/ which trips
+          # `shasum dist/*`. Hash only release artifacts.
+          (cd dist && shasum -a 256 *.whl *.tar.gz installer.py > SHA256SUMS)
 
       - name: Upload to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
@@ -44,5 +46,5 @@ jobs:
             dist/installer.py
             dist/installer.py.sha256
             dist/get_installer-*.whl
-            dist/get-installer-*.tar.gz
+            dist/get_installer-*.tar.gz
             dist/SHA256SUMS

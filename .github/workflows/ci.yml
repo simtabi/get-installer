@@ -13,25 +13,20 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        # ubuntu-latest covers amd64 + Linux. macos-latest is Apple Silicon
+        # (arm64). windows-latest rounds out the platform sweep.
+        # ARM64 Linux runners (ubuntu-24.04-arm) require a paid tier and
+        # were leaving runs queued indefinitely; Docker job below still
+        # builds linux/arm64 via cross-compile (QEMU + buildx). macos-13
+        # (Intel) retired upstream.
         os:
-          - ubuntu-latest          # amd64
-          - ubuntu-24.04-arm       # arm64: GitHub-hosted Linux/ARM runner
-          - macos-latest           # arm64 (Apple Silicon)
-          - macos-13               # amd64 (Intel): keep until 13 retires
+          - ubuntu-latest
+          - macos-latest
           - windows-latest
         python-version: ["3.10", "3.11", "3.12", "3.13"]
-        exclude:
-          # macos-13 only needs one Python: it's the Intel-coverage row,
-          # not a full matrix
-          - os: macos-13
-            python-version: "3.10"
-          - os: macos-13
-            python-version: "3.11"
-          - os: macos-13
-            python-version: "3.13"
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
           cache: pip
@@ -51,8 +46,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: test
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
       - name: Build bundle
@@ -68,7 +63,7 @@ jobs:
           fi
           echo "Bundle is reproducible. SHA: $(shasum -a 256 dist/installer.py | awk '{print $1}')"
       - name: Upload
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: installer
           path: |
@@ -80,7 +75,7 @@ jobs:
     name: shellcheck bootstrap scripts
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Install shellcheck
         run: sudo apt-get update && sudo apt-get install -y shellcheck
       - name: Run shellcheck
@@ -94,12 +89,12 @@ jobs:
     runs-on: ubuntu-latest
     needs: bundle
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Set up QEMU (for cross-arch builds)
         uses: docker/setup-qemu-action@v3
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
       - name: Build bundle (needed by Dockerfile)
