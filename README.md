@@ -1,5 +1,10 @@
 # get-installer
 
+[![CI](https://github.com/simtabi/get-installer/actions/workflows/ci.yml/badge.svg)](https://github.com/simtabi/get-installer/actions/workflows/ci.yml)
+[![PyPI](https://img.shields.io/pypi/v/get-installer.svg)](https://pypi.org/project/get-installer/)
+[![Python](https://img.shields.io/pypi/pyversions/get-installer.svg)](https://pypi.org/project/get-installer/)
+[![License](https://img.shields.io/github/license/simtabi/get-installer.svg)](LICENSE)
+
 A reusable, **registry-driven `curl | sh`-style installer** for
 distributing developer tools across public OSS, private enterprises,
 universities, and government / domain-locked contexts.

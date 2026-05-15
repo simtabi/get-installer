@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Documentation
+    url: https://opensource.simtabi.com/documentation/get-installer
+    about: Manual + per-platform reference playbook.
+  - name: Security vulnerability
+    url: https://github.com/simtabi/get-installer/security/policy
+    about: Use private vulnerability reporting; do not file a public issue.
+  - name: Discussion / question
+    url: https://github.com/simtabi/get-installer/discussions
+    about: Ask questions, share recipes, or propose ideas before formalising.

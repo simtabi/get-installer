@@ -1,0 +1,54 @@
+name: Feature request
+description: A new platform, CLI verb, or behaviour you'd like to see.
+title: "feat: "
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: Describe the use case in your own workflow, not the solution.
+      placeholder: |
+        I publish to JFrog Artifactory and would like get-installer to
+        handle it instead of a bespoke script.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed shape
+      description: What might the config + CLI look like? Free-form is fine.
+      placeholder: |
+        targets:
+          jfrog:
+            enabled: true
+            auth: token
+            repository: my-repo
+
+  - type: dropdown
+    id: type
+    attributes:
+      label: What kind of feature?
+      options:
+        - New platform (registry or git host)
+        - New CLI verb / flag
+        - New policy / safety check
+        - Workflow / composition
+        - Docs / examples
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Have you tried a workaround? What didn't work?
+
+  - type: checkboxes
+    id: willingness
+    attributes:
+      label: Contribution
+      options:
+        - label: I'd be willing to send a PR for this.

@@ -1,0 +1,77 @@
+name: Bug report
+description: Something is broken or behaving unexpectedly.
+title: "bug: "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for filing a bug! Please redact any tokens or
+        credentials before pasting logs.
+
+  - type: input
+    id: version
+    attributes:
+      label: get-installer version
+      description: Output of `get-installer version`.
+      placeholder: simtabi-get-installer 0.1.0
+    validations:
+      required: true
+
+  - type: input
+    id: python
+    attributes:
+      label: Python version
+      placeholder: "3.11.7"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating system
+      options:
+        - macOS
+        - Linux
+        - Windows
+        - Other (describe in details)
+    validations:
+      required: true
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What did you do? What did you expect? What did you get?
+      placeholder: |
+        1. ran `get-installer publish --target pypi`
+        2. expected the package to be uploaded
+        3. got `token-not-found` although PYPI_TOKEN was set
+    validations:
+      required: true
+
+  - type: textarea
+    id: command
+    attributes:
+      label: Exact command + relevant config
+      description: Paste the CLI you ran and the relevant section of release.json (redact tokens).
+      render: bash
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Doctor output / stderr
+      description: Run `get-installer help` and paste the table; or paste the failing command's stderr.
+      render: text
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Quick checks
+      options:
+        - label: I redacted any tokens / credentials before pasting.
+          required: true
+        - label: I checked `docs/troubleshooting.md`.
+          required: true
