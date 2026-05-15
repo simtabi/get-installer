@@ -2,7 +2,10 @@ from __future__ import annotations
 
 import os
 import stat
+import sys
 from pathlib import Path
+
+import pytest
 
 from get_installer import Journal, JournalEntry
 
@@ -79,6 +82,10 @@ def test_write_file_undo_deletes_when_new(tmp_path: Path) -> None:
     assert not p.exists()
 
 
+@pytest.mark.skipif(
+    sys.platform == "win32",
+    reason="POSIX permission bits don't apply on Windows; st_mode reports OS defaults",
+)
 def test_write_log_uses_strict_mode(tmp_path: Path) -> None:
     j = Journal()
     j.record(JournalEntry(description="x", undo=lambda: None))
