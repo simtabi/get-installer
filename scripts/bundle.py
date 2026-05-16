@@ -41,6 +41,7 @@ MODULE_ORDER = (
     "verify",
     "python_setup",
     "env_file",
+    "forge",
     "installer",
     "__main__",
 )

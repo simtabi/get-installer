@@ -43,20 +43,26 @@ def sign_bundle_with_sigstore(
     bundle_path: Path,
     *,
     dry_run: bool = True,
+    timeout: float = 120.0,
 ) -> Path:
-    """Sign ``bundle_path`` with sigstore (SCAFFOLD — Phase F).
+    """Sign ``bundle_path`` with sigstore using the keyless flow.
 
-    Wired today as a clean opt-in surface; full signing is pending
-    the key-management ADR. Install with::
+    Per ADR-0001 (docs/adr/0001-sigstore-key-management.md):
 
-        pip install 'get-installer[sigstore]'
+    - Identity: GitHub Actions workflow OIDC subject (no long-lived
+      key). The release workflow's ``id-token: write`` permission
+      provides the OIDC token; sigstore exchanges it with Fulcio
+      for a short-lived signing certificate.
+    - Transparency: every signature is recorded in Rekor.
+    - Verification: operators run ``sigstore verify identity`` with
+      the documented ``--cert-identity`` URL.
 
     @param bundle_path  the installer.py to sign.
-    @param dry_run      no actual signing yet.
-    @return  the .sig path that would be written.
-    @raises SecurityError when sigstore is not installed.
-    @raises NotImplementedError when called with dry_run=False —
-        we'd rather fail loudly than silently produce a no-op.
+    @param dry_run      preview only; no Fulcio / Rekor call.
+    @param timeout      seconds; matches the typical sigstore round
+                        trip with headroom (default 120s).
+    @return  the .sigstore bundle path written next to bundle_path.
+    @raises SecurityError when sigstore is not installed or signing fails.
     """
     try:
         import sigstore  # type: ignore[import-not-found]  # noqa: F401  # optional [sigstore] extra
@@ -68,12 +74,37 @@ def sign_bundle_with_sigstore(
     sig_path = bundle_path.with_suffix(bundle_path.suffix + ".sigstore")
     if dry_run:
         return sig_path
-    raise NotImplementedError(
-        "Sigstore signing is pending the key-management ADR. The "
-        "scaffold + extras install are ready; the actual sign() call + "
-        "verification command land in a follow-up release. See "
-        "SPEC §4 Phase F for the design questions still open."
-    )
+
+    # Invoke sigstore-python via subprocess to keep this layer
+    # shell-readable (same convention as the rest of the signing
+    # flow). sigstore-python's `sigstore` CLI writes a `.sigstore`
+    # JSON bundle (cert + signature + Rekor inclusion proof).
+    import subprocess
+    try:
+        result = subprocess.run(
+            [
+                "sigstore", "sign",
+                "--bundle", str(sig_path),
+                str(bundle_path),
+            ],
+            capture_output=True, text=True, check=False,
+            timeout=timeout,
+        )
+    except subprocess.TimeoutExpired as e:
+        raise SecurityError(
+            f"sigstore sign timed out after {timeout}s: Fulcio/Rekor unreachable?"
+        ) from e
+    if result.returncode != 0:
+        raise SecurityError(
+            f"sigstore sign failed (exit {result.returncode}):\n"
+            f"  stderr: {result.stderr.strip()}\n"
+            f"  stdout: {result.stdout.strip()}"
+        )
+    if not sig_path.is_file():
+        raise SecurityError(
+            f"sigstore reported success but {sig_path} is not present"
+        )
+    return sig_path
 
 
 def sha256_of(path: Path) -> str:
