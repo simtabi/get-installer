@@ -6,6 +6,31 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-05-16
+
+### Added
+
+- **`forge` field in registry.json schema** (Phase D, Round 3 #19):
+  optional `forge: {type, owner, repo, release_tag_template,
+  asset_pattern}` block per version. Informational today; v0.5 wires
+  per-forge fetchers (GitHub Releases, GitLab Releases, Codeberg,
+  Gitea). Backward-compatible.
+- **Sigstore signing scaffold** (Phase F, Round 2 #16): new
+  `[sigstore]` opt-in extras + `verify.sign_bundle_with_sigstore`
+  skeleton. Dry-run returns the planned .sigstore path; apply
+  raises NotImplementedError pointing at the pending
+  key-management ADR.
+- **REPO-PROPOSAL-admin.md** (Phase M, Round 4 #23): scope, stack,
+  routes, and bootstrap checklist for the sibling
+  `simtabi/get-installer-admin` Laravel repo when someone takes
+  that on.
+
+### Why minor not patch
+
+The `forge` schema field is a backward-compatible addition but
+opens the door for a class of new fetchers, so minor is the
+appropriate semver bump.
+
 ## [0.3.2] - 2026-05-16
 
 ### Fixed — release workflow
