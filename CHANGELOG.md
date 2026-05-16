@@ -6,6 +6,72 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-05-16
+
+### Added — SPEC Phase L
+
+- **`--env-file PATH`** flag + auto-discovery: load `KEY=VALUE`
+  env vars from a file before reading any `$GET_INSTALLER_*` var.
+  Search order: explicit flag → `$GET_INSTALLER_ENV_FILE` → `./.env`.
+  Existing shell env vars take precedence (Docker Compose / Foreman
+  semantics).
+- New stdlib-only loader at `get_installer/env_file.py`. Bundled
+  into the single-file `installer.py` via the existing bundler.
+
+### Added — SPEC Phase H (hardening)
+
+- Explicit `ssl.SSLContext` with `minimum_version=TLSv1_2`,
+  `check_hostname=True`, `verify_mode=CERT_REQUIRED` on every
+  `fetch_https` call. Modern Python defaults to this; pinning
+  removes a downgrade-attack surface.
+- 600s (10-minute) timeouts on every long-running
+  `subprocess.run()` (`git clone`, post-install steps, install
+  commands). A hung child surfaces as an error instead of blocking
+  forever.
+
+### Fixed
+
+- **`Registry.from_url` cache-age clamp**: Windows mtime skew can
+  put a freshly-renamed file slightly in the future of
+  `time.time()`. The age comparison now clamps negative values to
+  0 ("just-written = fresh"). `cache_max_age_seconds=0` still
+  bypasses the cache (`0 < 0 = False`).
+- **`scripts/bundle.py` writes bytes, not text**: previous
+  `write_text` translated `\n` → `\r\n` on Windows and produced an
+  on-disk SHA that mismatched the recorded sidecar. Now uses
+  `write_bytes()` for byte-identical output across platforms.
+- **CI matrix cleanup**: dropped `ubuntu-24.04-arm` (paid-tier
+  runner leaving runs queued indefinitely; Docker job covers
+  linux/arm64 via cross-compile) and `macos-13` (Intel retired).
+- **Release workflow fixes**:
+  - `shasum -a 256 dist/*` was choking on `dist/__pycache__/` from
+    `python -m build`. Switched to explicit-file glob:
+    `(cd dist && shasum -a 256 *.whl *.tar.gz installer.py)`.
+  - `softprops/action-gh-release` files glob aligned: tarball
+    name is `get_installer-*.tar.gz` (underscore, not hyphen).
+- **Docker base-image fixes** (Ubuntu 26.04 default):
+  - Pinned `python3.12` → meta `python3` (Ubuntu 26.04 ships 3.13
+    as default; 3.12 is no longer in resolute's repos).
+  - Removed pre-existing `ubuntu` user at UID 1000 before
+    `useradd -u 1000 installer` (otherwise exits 4 = UID-in-use).
+- **Windows test fixes**:
+  - `test_write_log_uses_strict_mode` skipped on Windows (POSIX
+    permission semantics don't apply).
+  - Two `bash -n` syntax-check tests skipped on Windows (Git-Bash
+    can't reliably parse Windows-style paths).
+  - Job-level `PYTHONIOENCODING=utf-8` + `PYTHONUTF8=1` so
+    subprocess captures round-trip the installer's UTF-8 output.
+
+### Changed
+
+- Node.js 20-deprecated actions bumped past the 2026-06-02 cutoff.
+- README badges (CI, PyPI, Python, license).
+- CodeQL workflow + issue/PR templates added.
+- Repository security toggles enabled.
+- SECURITY.md "Threat model" section: TLS 1.2 min + subprocess
+  timeout guarantees + "no `shell=True` anywhere" confirmed by
+  audit.
+
 ## [0.3.0] - 2026-05-14
 
 ### Added: Docker PUID/PGID handling + entrypoint privilege drop
