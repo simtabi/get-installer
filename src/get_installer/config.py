@@ -273,13 +273,14 @@ class Registry:
             key = _hashlib.sha256(url.encode("utf-8")).hexdigest()[:32]
             cache_path = cd / f"registry-{key}.json"
             if cache_path.is_file():
-                age = _time.time() - cache_path.stat().st_mtime
-                # Reject negative ages: on Windows (and some FUSE mounts)
+                # Clamp age to 0: on Windows (and some FUSE mounts)
                 # st_mtime can land slightly in the future after a rename
-                # because of filesystem-time vs wall-clock precision skew.
-                # `cache_max_age_seconds=0` must always bypass the cache,
-                # so guard the comparison from below.
-                if 0 <= age < cache_max_age_seconds:
+                # because of filesystem-time vs wall-clock precision skew,
+                # producing a negative age. A just-written cache is fresh,
+                # not stale; treat negatives as 0. `cache_max_age_seconds=0`
+                # still correctly bypasses (0 < 0 is False).
+                age = max(0.0, _time.time() - cache_path.stat().st_mtime)
+                if age < cache_max_age_seconds:
                     try:
                         data = json.loads(cache_path.read_text(encoding="utf-8"))
                         return cls.from_dict(data, source_path=cache_path)
