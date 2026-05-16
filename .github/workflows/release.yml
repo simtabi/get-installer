@@ -44,7 +44,7 @@ jobs:
             > bundle/SHA256SUMS
 
       - name: Attach bundle + checksums to GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           files: |
             bundle/installer.py
