@@ -39,6 +39,43 @@ def _hardened_ssl_context() -> ssl.SSLContext:
     return ctx
 
 
+def sign_bundle_with_sigstore(
+    bundle_path: Path,
+    *,
+    dry_run: bool = True,
+) -> Path:
+    """Sign ``bundle_path`` with sigstore (SCAFFOLD — Phase F).
+
+    Wired today as a clean opt-in surface; full signing is pending
+    the key-management ADR. Install with::
+
+        pip install 'get-installer[sigstore]'
+
+    @param bundle_path  the installer.py to sign.
+    @param dry_run      no actual signing yet.
+    @return  the .sig path that would be written.
+    @raises SecurityError when sigstore is not installed.
+    @raises NotImplementedError when called with dry_run=False —
+        we'd rather fail loudly than silently produce a no-op.
+    """
+    try:
+        import sigstore  # type: ignore[import-not-found]  # noqa: F401  # optional [sigstore] extra
+    except ImportError as e:
+        raise SecurityError(
+            "Sigstore signing requires the sigstore package. "
+            "Install via: pip install 'get-installer[sigstore]'"
+        ) from e
+    sig_path = bundle_path.with_suffix(bundle_path.suffix + ".sigstore")
+    if dry_run:
+        return sig_path
+    raise NotImplementedError(
+        "Sigstore signing is pending the key-management ADR. The "
+        "scaffold + extras install are ready; the actual sign() call + "
+        "verification command land in a follow-up release. See "
+        "SPEC §4 Phase F for the design questions still open."
+    )
+
+
 def sha256_of(path: Path) -> str:
     h = hashlib.sha256()
     with open(path, "rb") as f:

@@ -47,6 +47,11 @@ dev = [
   "ruff>=0.9",
   "mypy>=1.13",
 ]
+# `pip install 'get-installer[sigstore]'` enables future signed-bundle
+# attestations (SPEC Phase F). Skeleton wired; full signing flow is
+# pending the key-management ADR (which signing identity, key
+# rotation, where the public verification key ships).
+sigstore = ["sigstore>=3.0"]
 
 [project.scripts]
 get-installer = "get_installer.__main__:main"
