@@ -6,6 +6,25 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.3.2] - 2026-05-16
+
+### Fixed — release workflow
+
+- `pypa/gh-action-pypi-publish` uploads everything in `dist/` via
+  `twine upload dist/*`. The v0.3.1 release run failed when twine
+  rejected `dist/SHA256SUMS` as an invalid distribution. Same risk
+  for `dist/installer.py` and its sidecars. Fixed by:
+  - Keeping `dist/` strict (only `.whl` + `.tar.gz` at PyPI-upload
+    time).
+  - Moving the single-file bundle output to `bundle/installer.py`.
+  - Reordering: SHA256SUMS is computed AFTER the PyPI upload step.
+  - Adding `rm -rf dist/__pycache__` belt-and-suspenders after
+    `python -m build`.
+
+The v0.3.1 tag exists but never reached PyPI; v0.3.2 is the first
+published release containing the Phase L + hardening features
+listed under 0.3.1 below.
+
 ## [0.3.1] - 2026-05-16
 
 ### Added — SPEC Phase L
