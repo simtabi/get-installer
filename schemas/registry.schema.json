@@ -247,6 +247,42 @@
             }
           ]
         },
+        "forge": {
+          "description": "Optional forge metadata (Phase D). Identifies the source repo + release endpoint so future versions can resolve installer artifacts directly from GitHub / GitLab / Codeberg release pages. Today this field is informational; v0.4 will wire fetchers per forge type.",
+          "oneOf": [
+            { "type": "null" },
+            {
+              "type": "object",
+              "required": ["type", "owner", "repo"],
+              "additionalProperties": false,
+              "properties": {
+                "type": {
+                  "enum": ["github", "gitlab", "bitbucket", "codeberg", "gitea"],
+                  "description": "Which forge hosts the source."
+                },
+                "owner": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z0-9._-]{1,128}$",
+                  "description": "Org or user name."
+                },
+                "repo": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z0-9._-]{1,128}$",
+                  "description": "Repository name."
+                },
+                "release_tag_template": {
+                  "type": "string",
+                  "default": "v{version}",
+                  "description": "How the version maps to a release tag. {version} substitutes the version key."
+                },
+                "asset_pattern": {
+                  "type": "string",
+                  "description": "Glob matching the release asset filename. Empty = use the sdist."
+                }
+              }
+            }
+          ]
+        },
         "prompts": {
           "type": "array",
           "items": {
