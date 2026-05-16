@@ -6,6 +6,31 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-05-16
+
+### Added
+
+- **Forge per-type fetchers** (`36e4daa`): `src/get_installer/forge.py`
+  parses the registry.json `forge` block and builds release-asset
+  URLs for github, gitlab, codeberg, gitea, and bitbucket. 18 new
+  tests cover parse + per-forge URL builders + dispatcher.
+  Bundled into single-file installer.py via the bundler's
+  MODULE_ORDER.
+- **Sigstore signing — live implementation** (`36e4daa`):
+  `verify.sign_bundle_with_sigstore` is no longer a stub. Per
+  ADR-0001 (docs/adr/0001-sigstore-key-management.md), uses the
+  GitHub Actions workflow OIDC keyless flow via the `sigstore`
+  CLI. 120s timeout, raises `SecurityError` on Fulcio/Rekor
+  unreachable. `--apply` is implemented; existing `dry_run=True`
+  default behaviour unchanged.
+
+### Architecture decisions
+
+- **ADR-0001** (`docs/adr/0001-sigstore-key-management.md`)
+  records the keyless-signing decision, the verification command
+  with `--cert-identity` URL, and the rotation-not-applicable
+  rationale.
+
 ## [0.4.0] - 2026-05-16
 
 ### Added
