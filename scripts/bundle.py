@@ -40,6 +40,7 @@ MODULE_ORDER = (
     "journal",
     "verify",
     "python_setup",
+    "env_file",
     "installer",
     "__main__",
 )

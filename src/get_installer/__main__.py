@@ -9,6 +9,7 @@ from pathlib import Path
 
 from . import __version__
 from .config import ConfigError, Registry, ResolutionError, current_platform
+from .env_file import load_env_file
 from .installer import Installer
 from .ui import UI
 
@@ -17,6 +18,15 @@ def _build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
         prog="get-installer",
         description="Reusable installer for Simtabi dev tools. Driven by a registry.json.",
+    )
+    p.add_argument(
+        "--env-file",
+        type=Path, default=None,
+        help=(
+            "Load environment variables from a KEY=VALUE file before running. "
+            "Defaults to $GET_INSTALLER_ENV_FILE if set, else ./.env if present. "
+            "Existing env vars are NOT overridden."
+        ),
     )
     p.add_argument(
         "--registry", "-r",
@@ -155,6 +165,13 @@ def _default_registry_path() -> Path:
 
 def main(argv: list[str] | None = None) -> int:
     args = _build_parser().parse_args(argv)
+    # Load .env *before* the first env-var lookup so $GET_INSTALLER_*
+    # vars in the file actually take effect on this run.
+    try:
+        load_env_file(args.env_file)
+    except (FileNotFoundError, ValueError) as e:
+        sys.stderr.write(f"error: {e}\n")
+        return 2
     ui = UI(
         assume_yes=args.yes,
         quiet=args.quiet,
