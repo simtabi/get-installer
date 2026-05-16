@@ -26,25 +26,29 @@ jobs:
         run: |
           python -m pip install --upgrade pip build
           python -m build
+          # Remove dist/__pycache__/ if `python -m build` left one;
+          # twine treats every file in dist/ as a distribution and
+          # chokes on non-wheel/sdist entries.
+          rm -rf dist/__pycache__
 
-      - name: Build single-file bundle
-        run: python scripts/bundle.py --check
-
-      - name: Compute checksums
-        run: |
-          # `python -m build` leaves dist/__pycache__/ which trips
-          # `shasum dist/*`. Hash only release artifacts.
-          (cd dist && shasum -a 256 *.whl *.tar.gz installer.py > SHA256SUMS)
-
-      - name: Upload to PyPI
+      - name: Upload to PyPI (only whl + sdist)
         uses: pypa/gh-action-pypi-publish@release/v1
+        # At this point dist/ contains exactly *.whl + *.tar.gz. The
+        # bundle + checksum file are written to bundle/ in the next
+        # step so twine doesn't try to upload them.
+
+      - name: Build single-file bundle (into separate `bundle/` dir)
+        run: |
+          python scripts/bundle.py --output bundle/installer.py --check
+          shasum -a 256 dist/*.whl dist/*.tar.gz bundle/installer.py \
+            > bundle/SHA256SUMS
 
       - name: Attach bundle + checksums to GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            dist/installer.py
-            dist/installer.py.sha256
+            bundle/installer.py
+            bundle/installer.py.sha256
+            bundle/SHA256SUMS
             dist/get_installer-*.whl
             dist/get_installer-*.tar.gz
-            dist/SHA256SUMS
