@@ -10,6 +10,7 @@ import contextlib
 import hashlib
 import os
 import random
+import ssl
 import stat
 import sys
 import time
@@ -21,6 +22,21 @@ from pathlib import Path
 
 class SecurityError(Exception):
     """Raised when a security pre-flight check fails."""
+
+
+def _hardened_ssl_context() -> ssl.SSLContext:
+    """SSL context with TLS 1.2 minimum + system CA bundle.
+
+    Modern Python defaults to TLS 1.2+ already, but pinning it
+    explicitly removes a downgrade-attack surface if some downstream
+    flips the default. The system CA bundle is the default
+    ``create_default_context()`` source.
+    """
+    ctx = ssl.create_default_context()
+    ctx.minimum_version = ssl.TLSVersion.TLSv1_2
+    ctx.check_hostname = True
+    ctx.verify_mode = ssl.CERT_REQUIRED
+    return ctx
 
 
 def sha256_of(path: Path) -> str:
@@ -97,7 +113,10 @@ def fetch_https(
                 headers[k] = v
         req = urllib.request.Request(url, headers=headers)
         try:
-            with os.fdopen(fd, "wb") as f, urllib.request.urlopen(req, timeout=timeout) as resp:
+            ctx = _hardened_ssl_context()
+            with os.fdopen(fd, "wb") as f, urllib.request.urlopen(
+                req, timeout=timeout, context=ctx,
+            ) as resp:
                 status = getattr(resp, "status", None)
                 if status is not None and not (200 <= int(status) < 300):
                     if int(status) == 429 and attempt < max_retries:

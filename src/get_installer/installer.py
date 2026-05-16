@@ -295,9 +295,11 @@ class Installer:
             self.ui.skip(f"{target} already exists; not re-cloning")
             return
         target.parent.mkdir(parents=True, exist_ok=True)
+        # 10-min cap on git clone: enough for large repos on a slow
+        # link, short enough that a hung process surfaces as an error.
         r = subprocess.run(
             ["git", "clone", "--branch", repo.ref, repo.url, str(target)],
-            capture_output=True, text=True, check=False,
+            capture_output=True, text=True, check=False, timeout=600,
         )
         if r.returncode != 0:
             if repo.optional:
@@ -334,7 +336,8 @@ class Installer:
                 self.ui.skip(f"{cmd_str} (gate {step.if_expr!r} not met)")
                 continue
             self.ui.detail(cmd_str)
-            r = subprocess.run(list(step.argv), check=False)
+            # 10-min cap on each post_install step.
+            r = subprocess.run(list(step.argv), check=False, timeout=600)
             if r.returncode != 0:
                 raise SecurityError(
                     f"post_install command failed (exit {r.returncode}): {cmd_str}"
@@ -361,7 +364,11 @@ class Installer:
     # ---- helpers ----------------------------------------------------
 
     def _run_install_cmd(self, cmd: list[str]) -> None:
-        r = subprocess.run(cmd, capture_output=True, text=True, check=False)
+        # 10-min cap on install command (covers pipx/uv tool install of
+        # a heavy package on a slow link).
+        r = subprocess.run(
+            cmd, capture_output=True, text=True, check=False, timeout=600,
+        )
         if r.returncode != 0:
             raise SecurityError(
                 f"command failed: {' '.join(cmd)}\n  {r.stderr.strip() or r.stdout.strip()}"

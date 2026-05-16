@@ -49,6 +49,8 @@ and mitigations. Headline guarantees the installer makes:
 
 - HTTPS-only for every Python-side fetch, with an
   `access_control.allowed_origins` allowlist.
+- TLS 1.2+ minimum (explicit `ssl.SSLContext.minimum_version =
+  TLSv1_2`) — pinned even though modern Python defaults to it.
 - TOCTOU-safe writes (`O_CREAT | O_EXCL` + `0600` mode on every
   installer-owned file).
 - Refuse-root by default; `--allow-root` is the explicit override.
@@ -56,6 +58,11 @@ and mitigations. Headline guarantees the installer makes:
   respect.
 - Yanked-version hard stop (release-revocation channel).
 - Journaled rollback on signal or unhandled exception.
+- 10-minute timeout on every subprocess call (`git clone`,
+  post-install steps, install commands) so a hung child surfaces
+  as an error rather than blocking indefinitely.
+- All subprocess calls pass argv lists; no `shell=True` anywhere
+  in the codebase.
 
 ## Disclosure timeline
 
