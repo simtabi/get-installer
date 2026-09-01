@@ -15,7 +15,7 @@ fixes. Older versions are not patched. See
 
 **Do not** open a public GitHub issue for security problems.
 
-Email disclosures to: **`opensource@simtabi.com`**
+Email disclosures to: **`security@simtabi.com`**
 
 PGP key fingerprint: *to be published in `docs/security.md` § Signing*.
 
