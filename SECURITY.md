@@ -17,8 +17,6 @@ The preferred channel is GitHub private vulnerability reporting: open a private 
 
 **Do not** open a public GitHub issue for security problems.
 
-Email disclosures to: **`security@simtabi.com`**
-
 PGP key fingerprint: *to be published in `docs/security.md` § Signing*.
 
 We respond within **3 business days** to acknowledge receipt and
