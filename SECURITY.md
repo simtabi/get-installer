@@ -13,9 +13,11 @@ fixes. Older versions are not patched. See
 
 ## Reporting a vulnerability
 
+The preferred channel is GitHub private vulnerability reporting: open a private report at <https://github.com/simtabi/get-installer/security/advisories/new>. The report stays attached to the repository, with a draft advisory and a CVE request path. Email **security@simtabi.com** if you do not use GitHub.
+
 **Do not** open a public GitHub issue for security problems.
 
-Email disclosures to: **`opensource@simtabi.com`**
+Email disclosures to: **`security@simtabi.com`**
 
 PGP key fingerprint: *to be published in `docs/security.md` § Signing*.
 
