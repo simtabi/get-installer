@@ -5,6 +5,9 @@ on:
     tags:
       - "v*.*.*"
 
+permissions:
+  contents: read
+
 jobs:
   publish:
     name: build + publish wheel + bundle
@@ -32,7 +35,7 @@ jobs:
           rm -rf dist/__pycache__
 
       - name: Upload to PyPI (only whl + sdist)
-        uses: pypa/gh-action-pypi-publish@release/v1
+        uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33 # v1.14.2
         # At this point dist/ contains exactly *.whl + *.tar.gz. The
         # bundle + checksum file are written to bundle/ in the next
         # step so twine doesn't try to upload them.
@@ -44,7 +47,7 @@ jobs:
             > bundle/SHA256SUMS
 
       - name: Attach bundle + checksums to GitHub Release
-        uses: softprops/action-gh-release@v3
+        uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
         with:
           files: |
             bundle/installer.py
