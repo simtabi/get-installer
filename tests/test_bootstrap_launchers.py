@@ -213,13 +213,12 @@ def test_install_sh_lists_install_urls_when_no_python(tmp_path: Path) -> None:
     # the printed URLs and compare hosts exactly, rather than matching a
     # substring that could sit anywhere in a URL.
     urls = [urlsplit(u) for u in re.findall(r"https?://\S+", combined)]
-    hosts = {u.hostname for u in urls}
     assert any(
         u.hostname == "docs.astral.sh" and u.path.startswith("/uv")
         for u in urls
     )
-    assert "pipx.pypa.io" in hosts
-    assert "www.python.org" in hosts
+    assert any(u.hostname == "pipx.pypa.io" for u in urls)
+    assert any(u.hostname == "www.python.org" for u in urls)
     assert "--bootstrap-uv" in combined
 
 
