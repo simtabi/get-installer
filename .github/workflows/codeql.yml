@@ -1,10 +1,9 @@
 name: codeql
 
 on:
-  push:
-    branches: [main]
   pull_request:
     branches: [main]
+  workflow_dispatch:
   schedule:
     - cron: "30 6 * * 1"   # weekly, Monday 06:30 UTC (≈ 02:30 ET)
 
