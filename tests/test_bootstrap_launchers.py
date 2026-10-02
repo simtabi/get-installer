@@ -14,12 +14,14 @@ from __future__ import annotations
 
 import http.server
 import os
+import re
 import shutil
 import socketserver
 import subprocess
 import sys
 import threading
 from pathlib import Path
+from urllib.parse import urlsplit
 
 import pytest
 
@@ -207,10 +209,16 @@ def test_install_sh_lists_install_urls_when_no_python(tmp_path: Path) -> None:
     )
     assert r.returncode != 0
     combined = (r.stdout + r.stderr).lower()
-    # All three escape hatches must be named with their URL host
-    assert "docs.astral.sh/uv" in combined
-    assert "pipx.pypa.io" in combined
-    assert "python.org" in combined
+    # All three escape hatches must be named with their URL host. Parse
+    # the printed URLs and compare hosts exactly, rather than matching a
+    # substring that could sit anywhere in a URL.
+    urls = [urlsplit(u) for u in re.findall(r"https?://\S+", combined)]
+    assert any(
+        u.hostname == "docs.astral.sh" and u.path.startswith("/uv")
+        for u in urls
+    )
+    assert any(u.hostname == "pipx.pypa.io" for u in urls)
+    assert any(u.hostname == "www.python.org" for u in urls)
     assert "--bootstrap-uv" in combined
 
 
