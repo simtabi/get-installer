@@ -194,6 +194,10 @@ def main(argv: list[str] | None = None) -> int:
                     pre = Registry.load(fallback)
                     allowed_origins = pre.access_control.allowed_origins
                 except ConfigError:
+                    # Deliberate: an unreadable local registry is treated
+                    # like a missing one -- no allowed_origins pre-load. The
+                    # URL fetch still runs; from_url falls back to this path
+                    # only on fetch failure and raises if it is unusable too.
                     pass
             registry = Registry.from_url(
                 registry_arg,
