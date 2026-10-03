@@ -26,7 +26,7 @@ irm https://get.simtabi.com/install.ps1 | iex
 ## Table of contents
 
 - [Why this exists](#why-this-exists)
-- [Quick start](#quick-start)
+- [Quick start](#quick-start-guide-and-usage)
 - [What ships in the box](#what-ships-in-the-box)
 - [URL layout at `get.simtabi.com`](#url-layout-at-getsimtabicom)
 - [Project layout](#project-layout)
@@ -65,7 +65,18 @@ gold-standard one-liner), `Homebrew` (prompt-before-privileged-step),
 `Docker get.docker.com` (distribution-aware), `uv` install (Python
 bootstrap fallback), `k3s` (service installer).
 
-## Quick start
+## Quick start guide and usage
+
+### Getting started
+
+1. Point the CLI at a registry. Without `--registry`, it searches
+   `$GET_INSTALLER_REGISTRY`, `./registry.json`, and parent dirs.
+2. For an HTTPS registry that needs auth, set `$GET_INSTALLER_TOKEN`
+   (or pass `--auth-token`); it is sent as `Authorization: Bearer <token>`.
+3. Optional: keep those variables in a `KEY=VALUE` file. The CLI loads
+   `--env-file`, else `$GET_INSTALLER_ENV_FILE`, else `./.env` if present.
+
+### Usage
 
 ```bash
 get-installer --list                                # see what's available
