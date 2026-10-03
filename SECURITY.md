@@ -1,5 +1,7 @@
 # Security Policy
 
+Where this file is silent, the [Simtabi security policy](https://github.com/simtabi/.github/blob/HEAD/SECURITY.md) applies.
+
 ## Supported versions
 
 Only the latest minor release of `get-installer` receives security
