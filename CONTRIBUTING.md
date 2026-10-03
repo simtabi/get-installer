@@ -1,5 +1,7 @@
 # Contributing to get-installer
 
+Where this file is silent, the [Simtabi contributing guide](https://github.com/simtabi/.github/blob/HEAD/CONTRIBUTING.md) applies.
+
 Thanks for considering a contribution. This file captures the rules
 that keep the codebase consistent.
 
