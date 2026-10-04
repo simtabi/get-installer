@@ -362,3 +362,5 @@ Initial release as a standalone project. Previously shipped inside
 - Bundle script for vendoring as a single file.
 - Web UI / admin panel.
 - Mirror support.
+
+[Unreleased]: https://github.com/simtabi/get-installer/compare/v0.5.0...HEAD
