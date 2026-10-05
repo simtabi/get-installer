@@ -765,7 +765,7 @@ Concretely:
 - [ ] Add `supported_ecosystems` to the version-entry schema as a
       richer counterpart to `supported_platforms`. Same shape; broader
       vocabulary.
-- [ ] CI matrix: add `macos-14`, `ubuntu-24.04`, `windows-2022`,
+- [ ] CI matrix: add `macos-15` (pinned arm64; `macos-14` is retired on 2026-11-02), `ubuntu-24.04`, `windows-2022`,
       `ubuntu-24.04` with `alpine:edge` container, plus
       `freebsd-14` (via `cross-platform-actions/action` or QEMU).
 - [ ] `docs/ecosystems/` with one page per non-mainline target:
