@@ -6,6 +6,11 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Changed
+
+- The planned CI matrix in `docs/SPEC.md` names `macos-15` instead of `macos-14`, which GitHub
+  retires on 2026-11-02.
+
 ## [0.5.0] - 2026-05-16
 
 ### Added
