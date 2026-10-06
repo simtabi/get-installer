@@ -34,7 +34,10 @@ jobs:
           # chokes on non-wheel/sdist entries.
           rm -rf dist/__pycache__
 
+      # PyPI publishing is paused until the repository or org variable PUBLISH_PYPI
+      # is 'true'. Bundling and the GitHub release below still run on every tag.
       - name: Upload to PyPI (only whl + sdist)
+        if: ${{ vars.PUBLISH_PYPI == 'true' }}
         uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33 # v1.14.2
         # At this point dist/ contains exactly *.whl + *.tar.gz. The
         # bundle + checksum file are written to bundle/ in the next
