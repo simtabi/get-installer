@@ -550,7 +550,7 @@ For the server-side stack (Phase K) and any future deployable bits:
       script that checks the deploying user's `.env` against it (refuses
       to start if required vars are missing).
 - [ ] Documented variables: minimum viable set:
-      - `GET_INSTALLER_DB_URL`: Postgres DSN (`postgres://user:pass@host:5432/get`)
+      - `GET_INSTALLER_DB_URL`: Postgres DSN (`postgres://<user>:<password>@host:5432/get`)
       - `GET_INSTALLER_BASE_URL`: public origin (e.g. `https://get.simtabi.com`)
       - `GET_INSTALLER_ALLOWED_ORIGINS`: comma-separated allowlist
       - `GET_INSTALLER_TOKEN_SECRET`: HMAC secret for org tokens
